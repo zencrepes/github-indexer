@@ -35,6 +35,7 @@
 .yarn-integrity
 /.nyc_output
 /dist
+/lib
 /tmp
 /yarn.lock
 bower_components

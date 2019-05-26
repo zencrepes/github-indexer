@@ -29,26 +29,28 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`github-indexer hello`](#github-indexer-hello)
+* [`github-indexer hello [FILE]`](#github-indexer-hello-file)
 * [`github-indexer help [COMMAND]`](#github-indexer-help-command)
 
-## `github-indexer hello`
+## `github-indexer hello [FILE]`
 
-Describe the command here
+describe the command here
 
 ```
 USAGE
-  $ github-indexer hello
+  $ github-indexer hello [FILE]
 
 OPTIONS
+  -f, --force
+  -h, --help       show CLI help
   -n, --name=name  name to print
 
-DESCRIPTION
-  ...
-  Extra documentation goes here
+EXAMPLE
+  $ github-indexer hello
+  hello world from ./src/hello.ts!
 ```
 
-_See code: [src/commands/hello.js](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/hello.js)_
+_See code: [src/commands/hello.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/hello.ts)_
 
 ## `github-indexer help [COMMAND]`
 
