@@ -1,12 +1,8 @@
 #https://www.elastic.co/guide/en/elasticsearch/plugins/current/mapper-size-usage.html
-_size:
-  enabled: true
 _source:
   enabled: true
 properties:
   # Core properties of the entity
-  _id:
-    path: id
   createdAt:
     type: date
   updatedAt:

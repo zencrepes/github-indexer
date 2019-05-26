@@ -1,8 +1,10 @@
+import {ApiResponse, Client} from '@elastic/elasticsearch'
 import {Command, flags} from '@oclif/command'
 import cli from 'cli-ux'
+import * as loadYamlFile from 'load-yaml-file'
 
 export default class EsSchema extends Command {
-  static description = 'Create (or update) a schema in Elasticsearch'
+  static description = 'Create an index with a mapping in Elasticsearch'
 
   static examples = [
     '$ github-indexer es-schema -i issues',
@@ -41,7 +43,7 @@ export default class EsSchema extends Command {
 
   async run() {
     const {flags} = this.parse(EsSchema)
-    const force = flags.force
+    const {force, mapping, index, host, port} = flags
 
     // Force the user either to manually press y or to specify the force flag in the command line
     let proceed = true
@@ -52,20 +54,38 @@ export default class EsSchema extends Command {
       proceed = true
     }
     if (proceed) {
-      const mapping = flags.index || 'world'
+      this.log('Testing connection to the Elasticsearch cluster')
+      // tslint:disable-next-line:no-http-string
+      const client = new Client({node: 'http://' + host + ':' + port})
+      const healthCheck: ApiResponse = await client.cluster.health()
 
-      this.log('Importing yml mapping file ' + mapping + '.yml')
-
-      this.log('Parsing mapping file')
-      this.log('Submitting mapping file')
-
-      /*
-      const name = flags.index || 'world'
-      this.log('hello ${name} from ./src/commands/hello.ts')
-      if (args.file && flags.force) {
-        this.log('you input --force and --file: ${args.file}')
+      if (healthCheck.body.status === 'red') {
+        //https://nodejs.org/api/process.html#process_exit_codes
+        this.log('Elastic search cluster is not in an healthy state, exiting')
+        this.log(healthCheck.body)
+        process.exit(1)
       }
-      */
+
+      this.log('Testing for availability of index: ' + index)
+      const testIndex = await client.indices.exists({index})
+      if (testIndex.body !== false) {
+        this.log('Index already exists, deleting')
+        await client.indices.delete({index})
+      }
+
+      this.log('Loading the mapping from file ./src/schemas/' + mapping + '.yml')
+      const mappings = await loadYamlFile('./src/schemas/' + mapping + '.yml')
+      this.log('Schema configuration loaded')
+
+      this.log('Loading the settings from file ./src/schemas/settings.yml')
+      const settings = await loadYamlFile('./src/schemas/settings.yml')
+      this.log(JSON.stringify(settings))
+
+      this.log('Index settings loaded')
+
+      this.log('Creating the index: ' + index)
+      await client.indices.create({index, body: {settings, mappings}})
+      this.log('Index created: ' + index)
     } else {
       this.log('Command cancelled')
     }
