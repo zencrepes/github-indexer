@@ -10,11 +10,16 @@ export default class EsSchema extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
+    mapping: flags.string({
+      char: 'm',
+      required: true,
+      options: ['issues', 'labels', 'milestones', 'projects', 'pullrequests', 'repositories'],
+      description: 'Mapping to use'
+    }),
     index: flags.string({
       char: 'i',
       required: true,
-      options: ['issues', 'labels', 'milestones', 'projects', 'pullrequests', 'repositories'],
-      description: 'ES index to initialize'
+      description: 'ES index to initialize the mapping with'
     }),
     host: flags.string({
       char: 's',
@@ -35,8 +40,8 @@ export default class EsSchema extends Command {
   static args = [{name: 'file'}]
 
   async run() {
-    const {args, flags} = this.parse(EsSchema)
-    const force = flags.force;
+    const {flags} = this.parse(EsSchema)
+    const force = flags.force
 
     // Force the user either to manually press y or to specify the force flag in the command line
     let proceed = true
@@ -49,18 +54,20 @@ export default class EsSchema extends Command {
     if (proceed) {
       const mapping = flags.index || 'world'
 
-      this.log(`Importing yml mapping file ${mapping}.yml`)
+      this.log('Importing yml mapping file ' + mapping + '.yml')
 
-      this.log(`Parsing mapping file`)
-      this.log(`Submitting mapping file`)
+      this.log('Parsing mapping file')
+      this.log('Submitting mapping file')
 
+      /*
       const name = flags.index || 'world'
-      this.log(`hello ${name} from ./src/commands/hello.ts`)
+      this.log('hello ${name} from ./src/commands/hello.ts')
       if (args.file && flags.force) {
-        this.log(`you input --force and --file: ${args.file}`)
+        this.log('you input --force and --file: ${args.file}')
       }
+      */
     } else {
-      this.log(`Command cancelled`)
+      this.log('Command cancelled')
     }
   }
 }
