@@ -14,6 +14,7 @@ export default class fetchAffiliated {
   constructor (log: any, userConfig: object, cli: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
+    this.maxQueryIncrement = userConfig.fetch.max_nodes
 
     this.log = log;
     this.cli = cli;
@@ -100,7 +101,7 @@ export default class fetchAffiliated {
     //this.log('GraphQL Response:', data);
     //updateChip(data.data.rateLimit);
     let lastCursor = await this.loadOrganizations(data);
-    let queryIncrement = calculateQueryIncrement(this.githubOrgs.length, data.data.viewer.organizations.totalCount);
+    let queryIncrement = calculateQueryIncrement(this.githubOrgs.length, data.data.viewer.organizations.totalCount, this.maxQueryIncrement);
     if (queryIncrement > 0) {
       await this.getOrgsPagination(lastCursor, queryIncrement);
     }
@@ -157,7 +158,7 @@ export default class fetchAffiliated {
           }
           //updateChip(data.data.rateLimit);
           let lastCursor = await this.loadRepositories(repositories, OrgObj);
-          let queryIncrement = calculateQueryIncrement(this.orgReposCount[OrgObj.id], repositories.totalCount);
+          let queryIncrement = calculateQueryIncrement(this.orgReposCount[OrgObj.id], repositories.totalCount, this.maxQueryIncrement);
           this.log('Org: ' + OrgObj.login + ' -> Fetched Count / Remote Count / Query Increment: ' + this.orgReposCount[OrgObj.id] + ' / ' + repositories.totalCount + ' / ' + queryIncrement);
           if (queryIncrement > 0) {
             await this.getReposPagination(lastCursor, queryIncrement, OrgObj, type);
