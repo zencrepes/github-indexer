@@ -6,6 +6,7 @@ import * as path from 'path'
 
 import FetchAffiliated from '../utils/github/fetchAffiliated/index'
 import FetchOrg from '../utils/github/fetchOrg/index'
+import FetchRepo from '../utils/github/fetchRepo/index'
 
 export default class GithubRepo extends Command {
   static description = 'Fetch repositories from GitHub'
@@ -54,8 +55,10 @@ export default class GithubRepo extends Command {
       this.log('Starting to fetch data from org: ' + org)
       const fetchData = new FetchOrg(this.log, this.error, userConfig, cli)
       fetchedRepos = await fetchData.load(org)
-    } else if (grab === 'repo') {
+    } else if (grab === 'repo' && org !== undefined && repo !== undefined) {
       this.log('Starting to fetch data from repo: ' + org + '/' + repo)
+      const fetchData = new FetchRepo(this.log, this.error, userConfig, cli)
+      fetchedRepos = await fetchData.load(org, repo)
     }
     this.log(fetchedRepos)
   }
