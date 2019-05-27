@@ -77,7 +77,7 @@ export default class GithubRepo extends Command {
     }
     const testIndex = await client.indices.exists({index: reposIndexName})
     if (testIndex.body === false) {
-      cli.action.start('Repository gh_repos does not exist, creating')
+      cli.action.start('Elasticsearch Index gh_repos does not exist, creating')
       const mappings = await loadYamlFile('./src/schemas/repositories.yml')
       const settings = await loadYamlFile('./src/schemas/settings.yml')
       await client.indices.create({index: reposIndexName, body: {settings, mappings}})
@@ -132,7 +132,7 @@ export default class GithubRepo extends Command {
           }
         }) + '\n' + JSON.stringify(rec) + '\n'
       }
-      await client.bulk({index: reposIndexName, body: formattedData})
+      await client.bulk({index: reposIndexName, refresh: 'wait_for', body: formattedData})
       cli.action.stop(' done')
     }
 
@@ -149,11 +149,13 @@ export default class GithubRepo extends Command {
       }
     })
 
+    const esResults = _.sortBy(esRepos.body.hits.hits, [function (o) { if (o.org !== null) { return o.user } else { return '' } }])
+
     this.log('')
     this.log('All available repositories:')
-    cli.table(esRepos.body.hits.hits, {
+    cli.table(esResults, {
       name: {
-        get: row => (row._source.name + '/' + row._source.name)
+        get: row => (row._source.org.login + '/' + row._source.name)
       },
       active: {
         get: row => row._source.active
@@ -162,7 +164,7 @@ export default class GithubRepo extends Command {
       printLine: this.log,
     })
     this.log('')
-    const configArray = esRepos.body.hits.hits.map(repo => {
+    const configArray = esResults.map(repo => {
       return {
         [repo._source.org.login + '/' + repo._source.name]: repo._source.active
       }
