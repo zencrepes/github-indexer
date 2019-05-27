@@ -63,7 +63,7 @@ export default class FetchOrg {
   public async load(login) {
     this.log('Started load')
 
-    cli.action.start('Loading repositories for organizations: ' + login)
+    cli.action.start('Loading repositories for organization: ' + login)
     await this.getReposPagination(null, 10, login)
     cli.action.stop(' completed')
     return this.fetchedRepos

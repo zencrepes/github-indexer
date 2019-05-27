@@ -39,12 +39,12 @@ export default class GithubRepo extends Command {
       description: 'GitHub repository name'
     }),
     // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f', default: false}),
+    force: flags.boolean({char: 'f', default: false, description: 'Make all fetched repositories active by default'}),
   }
 
   async run() {
     const {flags} = this.parse(GithubRepo)
-    const {grab, org, repo} = flags
+    const {grab, org, repo, force} = flags
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
     const es_port = userConfig.elasticsearch.port
     const es_host = userConfig.elasticsearch.host
@@ -67,11 +67,11 @@ export default class GithubRepo extends Command {
     const reposIndexName = 'gh_repos'
 
     //2- Test if an index exists, if it does not, create it.
-    cli.action.start('Checking if repository: ' + reposIndexName + ' exists')
+    cli.action.start('Checking if index: ' + reposIndexName + ' exists')
     const client = new Client({node: es_host + ':' + es_port})
     const healthCheck: ApiResponse = await client.cluster.health()
     if (healthCheck.body.status === 'red') {
-      this.log('Elastic search cluster is not in an healthy state, exiting')
+      this.log('Elasticsearch cluster is not in an healthy state, exiting')
       this.log(healthCheck.body)
       process.exit(1)
     }
@@ -108,6 +108,9 @@ export default class GithubRepo extends Command {
       } else {
         updatedRepo.active = false
       }
+      if (force === true) {
+        updatedRepo.active = true
+      }
       //If submitting only one repository, assumption is that it should be active.
       if (grab === 'repo') {
         this.log('Activating repository: ' + repo.org.login + '/' + repo.name)
@@ -122,7 +125,7 @@ export default class GithubRepo extends Command {
     const esPayloadChunked = await this.chunkArray(esPayload, 100)
     //5- Push the results back to Elastic Search
     for (const [idx, esPayloadChunk] of esPayloadChunked.entries()) {
-      cli.action.start('Submitting data to ElasticSearch (' + parseInt(idx + 1, 10) + ' / ' + esPayload.length + ')')
+      cli.action.start('Submitting data to ElasticSearch (' + parseInt(idx + 1, 10) + ' / ' + esPayloadChunked.length + ')')
       let formattedData = ''
       for (let rec of esPayloadChunk) {
         formattedData = formattedData + JSON.stringify({
@@ -149,16 +152,17 @@ export default class GithubRepo extends Command {
       }
     })
 
-    const esResults = _.sortBy(esRepos.body.hits.hits, [function (o) { if (o.org !== null) { return o.user } else { return '' } }])
+    //const esResults = _.sortBy(esRepos.body.hits.hits, [function (o) { if (o.org !== null) { return o.user } else { return '' } }])
+    const esResults = _.sortBy(esRepos.body.hits.hits.map(r => r._source), ['org.login', 'name'])
 
     this.log('')
     this.log('All available repositories:')
     cli.table(esResults, {
       name: {
-        get: row => (row._source.org.login + '/' + row._source.name)
+        get: row => (row.org.login + '/' + row.name)
       },
       active: {
-        get: row => row._source.active
+        get: row => row.active
       },
     }, {
       printLine: this.log,
@@ -166,7 +170,7 @@ export default class GithubRepo extends Command {
     this.log('')
     const configArray = esResults.map(repo => {
       return {
-        [repo._source.org.login + '/' + repo._source.name]: repo._source.active
+        [repo.org.login + '/' + repo.name]: repo.active
       }
     })
     fs.writeFileSync(path.join(this.config.configDir, 'repositories.yml'), jsYaml.safeDump(configArray))

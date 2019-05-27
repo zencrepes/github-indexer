@@ -8,6 +8,7 @@
     "strict": true,
     "target": "es2017",
     "composite": true,
+    "baseUrl": "./",
     "paths": {
       "*": ["types/*"]
     }
