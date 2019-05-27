@@ -2,10 +2,11 @@ import {ApiResponse, Client} from '@elastic/elasticsearch'
 import {Command, flags} from '@oclif/command'
 import cli from 'cli-ux'
 import * as loadYamlFile from 'load-yaml-file'
-import * as path from 'path'
+import * as path from "path";
+import fetchAffiliated from '../utils/github/fetchAffiliated/index'
 
-export default class EsSchema extends Command {
-  static description = 'Create an index with a mapping in Elasticsearch'
+export default class GithubRepo extends Command {
+  static description = 'Fetch repositories from GitHub'
 
   static examples = [
     '$ github-indexer es-schema -i issues',
@@ -13,16 +14,21 @@ export default class EsSchema extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    mapping: flags.string({
-      char: 'm',
+    grab: flags.string({
+      char: 'g',
       required: true,
-      options: ['issues', 'labels', 'milestones', 'projects', 'pullrequests', 'repositories'],
-      description: 'Mapping to use'
+      options: ['affiliated', 'org', 'repo'],
+      description: 'Select how to fetch repositories'
     }),
-    index: flags.string({
-      char: 'i',
-      required: true,
-      description: 'ES index to initialize the mapping with'
+    org: flags.string({
+      char: 'o',
+      required: false,
+      description: 'GitHub organization login'
+    }),
+    repo: flags.string({
+      char: 'r',
+      required: false,
+      description: 'GitHub repository name'
     }),
     // flag with no value (-f, --force)
     force: flags.boolean({char: 'f', default: false}),
@@ -31,12 +37,32 @@ export default class EsSchema extends Command {
   static args = [{name: 'file'}]
 
   async run() {
-    const {flags} = this.parse(EsSchema)
-    const {force, mapping, index} = flags
+    const {flags} = this.parse(GithubRepo)
+    const {grab, org, repo} = flags
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
     const port = userConfig.elasticsearch.port
     const host = userConfig.elasticsearch.host
+    const token = userConfig.github.token
 
+    if (grab === 'affiliated') {
+      this.log('Starting to fetch data from affiliated organizations')
+      cli.action.start('starting a process')
+      const fetchData = new fetchAffiliated(this.log, userConfig, cli)
+      const fetchedRepos = await fetchData.load();
+      //Return all repos as a big array
+      this.log(fetchedRepos)
+      cli.action.stop('custom message')
+
+    } else if (grab === 'org') {
+      this.log('Starting to fetch data from org: ' + org)
+
+
+    } else if (grab === 'repo') {
+      this.log('Starting to fetch data from repo: ' + org + '/' + repo)
+
+    }
+  }
+/*
     // Force the user either to manually press y or to specify the force flag in the command line
     let proceed = true
     if (!force) {
@@ -48,7 +74,7 @@ export default class EsSchema extends Command {
     if (proceed) {
       this.log('Testing connection to the Elasticsearch cluster')
       // tslint:disable-next-line:no-http-string
-      const client = new Client({node: host + ':' + port})
+      const client = new Client({node: 'http://' + host + ':' + port})
       const healthCheck: ApiResponse = await client.cluster.health()
 
       if (healthCheck.body.status === 'red') {
@@ -81,5 +107,5 @@ export default class EsSchema extends Command {
     } else {
       this.log('Command cancelled')
     }
-  }
+  */
 }

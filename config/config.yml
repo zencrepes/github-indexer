@@ -1,0 +1,8 @@
+elasticsearch:
+  port: 9200
+  host: 'http://127.0.0.1'
+fetch:
+  max_nodes: 30
+github:
+  username: 'YOUR_USERNAME'
+  token: 'TOKEN_HERE'
