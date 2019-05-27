@@ -58,10 +58,10 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`github-indexer hello [FILE]`](#github-indexer-hello-file)
+* [`github-indexer ghRepos [FLAGS]`](#github-indexer-ghRepos)
 * [`github-indexer help [COMMAND]`](#github-indexer-help-command)
 
-## `github-indexer githubRepo`
+## `github-indexer ghRepos`
 
 Grabs repositories and metadata from GitHub, a necessary step before being able to pull associated data such as Issues, Projects, PullRequests, ...
 
@@ -74,7 +74,7 @@ At the end of the process, a YAML file is generated and stored at `~/.config/git
 
 ```
 USAGE
-  $ github-indexer githubRepo
+  $ github-indexer ghRepos
 
 OPTIONS
   -f, --force
@@ -84,8 +84,8 @@ OPTIONS
   -r, --repo=repo                 GitHub repository name
 
 EXAMPLES
-  $ github-indexer githubRepo -g affiliated
-  $ github-indexer githubRepo -g org -o jetbrains
-  $ github-indexer githubRepo -g repo -o microsoft -r vscode
+  $ github-indexer ghRepos -g affiliated
+  $ github-indexer ghRepos -g org -o jetbrains
+  $ github-indexer ghRepos -g repo -o microsoft -r vscode
 ```
 <!-- commandsstop -->

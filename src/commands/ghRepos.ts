@@ -11,13 +11,13 @@ import FetchAffiliated from '../utils/github/fetchAffiliated/index'
 import FetchOrg from '../utils/github/fetchOrg/index'
 import FetchRepo from '../utils/github/fetchRepo/index'
 
-export default class GithubRepo extends Command {
+export default class GhRepos extends Command {
   static description = 'Fetch repositories from GitHub'
 
   static examples = [
-    '$ github-indexer githubRepo -g affiliated',
-    '$ github-indexer githubRepo -g org -o jetbrains',
-    '$ github-indexer githubRepo -g repo -o microsoft -r vscode',
+    '$ github-indexer ghRepo -g affiliated',
+    '$ github-indexer ghRepo -g org -o jetbrains',
+    '$ github-indexer ghRepo -g repo -o microsoft -r vscode',
   ]
 
   static flags = {
@@ -43,7 +43,7 @@ export default class GithubRepo extends Command {
   }
 
   async run() {
-    const {flags} = this.parse(GithubRepo)
+    const {flags} = this.parse(GhRepos)
     const {grab, org, repo, force} = flags
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
     const es_port = userConfig.elasticsearch.port
