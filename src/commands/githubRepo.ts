@@ -15,7 +15,9 @@ export default class GithubRepo extends Command {
   static description = 'Fetch repositories from GitHub'
 
   static examples = [
-    '$ github-indexer es-schema -i issues',
+    '$ github-indexer githubRepo -g affiliated',
+    '$ github-indexer githubRepo -g org -o jetbrains',
+    '$ github-indexer githubRepo -g repo -o microsoft -r vscode',
   ]
 
   static flags = {
@@ -39,8 +41,6 @@ export default class GithubRepo extends Command {
     // flag with no value (-f, --force)
     force: flags.boolean({char: 'f', default: false}),
   }
-
-  static args = [{name: 'file'}]
 
   async run() {
     const {flags} = this.parse(GithubRepo)
