@@ -5,6 +5,7 @@ import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
 import FetchAffiliated from '../utils/github/fetchAffiliated/index'
+import FetchOrg from '../utils/github/fetchOrg/index'
 
 export default class GithubRepo extends Command {
   static description = 'Fetch repositories from GitHub'
@@ -42,20 +43,21 @@ export default class GithubRepo extends Command {
     const {grab, org, repo} = flags
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
 
+    let fetchedRepos = []
     if (grab === 'affiliated') {
       this.log('Starting to fetch data from affiliated organizations')
-      cli.action.start('starting a process')
       const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli)
-      const fetchedRepos = await fetchData.load()
+      fetchedRepos = await fetchData.load()
       //Return all repos as a big array
-      this.log(fetchedRepos)
-      cli.action.stop('custom message')
 
-    } else if (grab === 'org') {
+    } else if (grab === 'org' && org !== undefined) {
       this.log('Starting to fetch data from org: ' + org)
+      const fetchData = new FetchOrg(this.log, this.error, userConfig, cli)
+      fetchedRepos = await fetchData.load(org)
     } else if (grab === 'repo') {
       this.log('Starting to fetch data from repo: ' + org + '/' + repo)
     }
+    this.log(fetchedRepos)
   }
 /*
     // Force the user either to manually press y or to specify the force flag in the command line
