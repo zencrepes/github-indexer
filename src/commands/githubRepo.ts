@@ -1,9 +1,10 @@
-import {ApiResponse, Client} from '@elastic/elasticsearch'
+//import {ApiResponse, Client} from '@elastic/elasticsearch'
 import {Command, flags} from '@oclif/command'
 import cli from 'cli-ux'
 import * as loadYamlFile from 'load-yaml-file'
-import * as path from "path";
-import fetchAffiliated from '../utils/github/fetchAffiliated/index'
+import * as path from 'path'
+
+import FetchAffiliated from '../utils/github/fetchAffiliated/index'
 
 export default class GithubRepo extends Command {
   static description = 'Fetch repositories from GitHub'
@@ -40,26 +41,20 @@ export default class GithubRepo extends Command {
     const {flags} = this.parse(GithubRepo)
     const {grab, org, repo} = flags
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
-    const port = userConfig.elasticsearch.port
-    const host = userConfig.elasticsearch.host
-    const token = userConfig.github.token
 
     if (grab === 'affiliated') {
       this.log('Starting to fetch data from affiliated organizations')
       cli.action.start('starting a process')
-      const fetchData = new fetchAffiliated(this.log, userConfig, cli)
-      const fetchedRepos = await fetchData.load();
+      const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli)
+      const fetchedRepos = await fetchData.load()
       //Return all repos as a big array
       this.log(fetchedRepos)
       cli.action.stop('custom message')
 
     } else if (grab === 'org') {
       this.log('Starting to fetch data from org: ' + org)
-
-
     } else if (grab === 'repo') {
       this.log('Starting to fetch data from repo: ' + org + '/' + repo)
-
     }
   }
 /*
