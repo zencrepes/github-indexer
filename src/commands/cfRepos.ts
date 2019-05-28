@@ -21,8 +21,7 @@ export default class CfRepos extends Command {
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
     const es_port = userConfig.elasticsearch.port
     const es_host = userConfig.elasticsearch.host
-
-    const reposIndexName = 'gh_repos'
+    const reposIndexName = userConfig.elasticsearch.indices.repos
 
     //1- Test if an index exists, if it does not, exit.
     cli.action.start('Checking if index: ' + reposIndexName + ' exists')

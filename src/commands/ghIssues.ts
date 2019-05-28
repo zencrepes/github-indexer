@@ -7,51 +7,115 @@ import * as loadYamlFile from 'load-yaml-file'
 import * as _ from 'lodash'
 import * as path from 'path'
 
-import FetchAffiliated from '../utils/github/fetchAffiliated/index'
-import FetchOrg from '../utils/github/fetchOrg/index'
-import FetchRepo from '../utils/github/fetchRepo/index'
+import FetchIssues from '../utils/github/fetchIssues/index'
 
-export default class GhRepos extends Command {
-  static description = 'Fetch repositories from GitHub'
+export default class GhIssues extends Command {
+  static description = 'Fetch issues from GitHub'
 
   static examples = [
-    '$ github-indexer ghRepo -g affiliated',
-    '$ github-indexer ghRepo -g org -o jetbrains',
-    '$ github-indexer ghRepo -g repo -o microsoft -r vscode',
+    '$ github-indexer ghIssues',
   ]
 
   static flags = {
     help: flags.help({char: 'h'}),
-    grab: flags.string({
-      char: 'g',
-      required: true,
-      options: ['affiliated', 'org', 'repo'],
-      description: 'Select how to fetch repositories'
-    }),
-    org: flags.string({
-      char: 'o',
-      required: false,
-      description: 'GitHub organization login'
-    }),
-    repo: flags.string({
-      char: 'r',
-      required: false,
-      description: 'GitHub repository name'
-    }),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f', default: false, description: 'Make all fetched repositories active by default'}),
   }
 
   async run() {
-    const {flags} = this.parse(GhRepos)
-    const {grab, org, repo, force} = flags
+    const {flags} = this.parse(GhIssues)
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
     const es_port = userConfig.elasticsearch.port
     const es_host = userConfig.elasticsearch.host
     const reposIndexName = userConfig.elasticsearch.indices.repos
+    const indexIssuePrefix = userConfig.elasticsearch.indices.issues
+
+    //1- Test if an index exists, if it does not, create it.
+    cli.action.start('Checking if index: ' + reposIndexName + ' exists')
+    const client = new Client({node: es_host + ':' + es_port})
+    const healthCheck: ApiResponse = await client.cluster.health()
+    if (healthCheck.body.status === 'red') {
+      this.log('Elasticsearch cluster is not in an healthy state, exiting')
+      this.log(healthCheck.body)
+      process.exit(1)
+    }
+    const testIndex = await client.indices.exists({index: reposIndexName})
+    if (testIndex.body === false) {
+      cli.action.start('Elasticsearch Index gh_repos does not exist, creating')
+      const mappings = await loadYamlFile('./src/schemas/repositories.yml')
+      const settings = await loadYamlFile('./src/schemas/settings.yml')
+      await client.indices.create({index: reposIndexName, body: {settings, mappings}})
+    }
+    cli.action.stop(' done')
+
+    //2- Grab the active repositories from Elasticsearch
+    cli.action.start('Grabbing the active repositories from ElasticSearch')
+    let esRepos = await client.search({
+      index: reposIndexName,
+      body: {
+        from: 0,
+        size: 10000,
+        query: {
+          match: {
+            active: {
+              query: true
+            }
+          }
+        }
+      }
+    })
+    //console.log(esRepos.body.hits.hits);
+    const activeRepos = esRepos.body.hits.hits.map(r => r._source)
+    cli.action.stop(' done')
+
+    if (activeRepos.length === 0) {
+      this.error('The script could not find any active repositories. Please use ghRepos and cfRepos first.', {exit: 1})
+    }
+    const fetchData = new FetchIssues(this.log, this.error, userConfig, cli)
+
+    this.log('Starting to grab issues');
+    for (let repo of activeRepos) {
+      //A - Fetch issues from GitHub into a large array
+      cli.action.start('Grabbing issues for: ' + repo.org.login + '/' + repo.name + ' (will fetch up to ' + repo.issues.totalCount + ' issues)')
+      let fetchedIssues = await fetchData.load(repo)
+      cli.action.stop(' done')
+
+      //B - Check if repo index exists, if not create
+      const issuesIndex = (indexIssuePrefix + '_' + repo.org.login + '_' + repo.name).toLocaleLowerCase()
+      const testIndex = await client.indices.exists({index: issuesIndex})
+      if (testIndex.body === false) {
+        cli.action.start('Elasticsearch Index ' + issuesIndex + ' does not exist, creating')
+        const mappings = await loadYamlFile('./src/schemas/issues.yml')
+        const settings = await loadYamlFile('./src/schemas/settings.yml')
+        const response = await client.indices.create({index: issuesIndex, body: {settings, mappings}})
+        console.log(JSON.stringify(response));
+        cli.action.stop(' created')
+      }
+
+      //C - Break down the issues response in multiple batches
+      const esPayloadChunked = await this.chunkArray(fetchedIssues, 100)
+      //5- Push the results back to Elastic Search
+      for (const [idx, esPayloadChunk] of esPayloadChunked.entries()) {
+        cli.action.start('Submitting data to ElasticSearch into ' + issuesIndex + ' (' + parseInt(idx + 1, 10) + ' / ' + esPayloadChunked.length + ')')
+        let formattedData = ''
+        for (let rec of esPayloadChunk) {
+          formattedData = formattedData + JSON.stringify({
+            index: {
+              _index: issuesIndex,
+              _id: rec.id
+            }
+          }) + '\n' + JSON.stringify(rec) + '\n'
+        }
+        const response = await client.bulk({index: issuesIndex, refresh: 'wait_for', body: formattedData})
+        cli.action.stop(' done')
+      }
+      //console.log(fetchedIssues);
+
+
+    }
+
+    /*
 
     //1- Grab the repositories from GitHub
-    let fetchedRepos = []
+    let fetchedIssues = []
     if (grab === 'affiliated') {
       this.log('Starting to fetch data from affiliated organizations')
       const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli)
@@ -65,6 +129,7 @@ export default class GhRepos extends Command {
       const fetchData = new FetchRepo(this.log, this.error, userConfig, cli)
       fetchedRepos = await fetchData.load(org, repo)
     }
+    const reposIndexName = 'gh_repos'
 
     //2- Test if an index exists, if it does not, create it.
     cli.action.start('Checking if index: ' + reposIndexName + ' exists')
@@ -176,6 +241,7 @@ export default class GhRepos extends Command {
     fs.writeFileSync(path.join(this.config.configDir, 'repositories.yml'), jsYaml.safeDump(configArray))
     cli.action.stop(' done')
     this.log('You can enable/disable repositories in: ' + path.join(this.config.configDir, 'repositories.yml'))
+    */
   }
 
   //https://ourcodeworld.com/articles/read/278/how-to-split-an-array-into-chunks-of-the-same-size-easily-in-javascript
