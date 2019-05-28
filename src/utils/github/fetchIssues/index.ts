@@ -2,13 +2,10 @@ import {InMemoryCache} from 'apollo-cache-inmemory'
 import ApolloClient from 'apollo-client'
 import {ApolloLink, concat} from 'apollo-link'
 import {HttpLink} from 'apollo-link-http'
-import cli from 'cli-ux'
+import {format, parseISO} from 'date-fns'
 import {readFileSync} from 'fs'
-import * as _ from 'lodash'
 import fetch from 'node-fetch'
-import { performance } from 'perf_hooks';
-import {format, parseISO}  from 'date-fns'
-
+import {performance} from 'perf_hooks'
 
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
@@ -65,7 +62,7 @@ export default class FetchIssues {
 
   public async load(repo, recentIssue) {
     this.fetchedIssues = []
-    await this.getIssuesPagination(null, 5, repo, recentIssue);
+    await this.getIssuesPagination(null, 5, repo, recentIssue)
     return this.fetchedIssues
   }
 
@@ -78,9 +75,8 @@ export default class FetchIssues {
   private async getIssuesPagination(cursor: any, increment: any, repoObj: any, recentIssue: any) {
     if (this.errorRetry <= 3) {
       let data = {}
-      let repositories = {}
       await this.sleep(1000) // Wait 2s between requests to avoid hitting GitHub API rate limit => https://developer.github.com/v3/guides/best-practices-for-integrators/
-      const t0 = performance.now();
+      const t0 = performance.now()
       try {
         data = await graphqlQuery(
           this.client,
@@ -92,8 +88,8 @@ export default class FetchIssues {
       } catch (error) {
         this.log(error)
       }
-      const t1 = performance.now();
-      const callDuration = t1 - t0;
+      const t1 = performance.now()
+      const callDuration = t1 - t0
 //        this.log(data)
 //        this.log(OrgObj)
       if (data.data !== undefined && data.data !== null) {
@@ -125,13 +121,13 @@ export default class FetchIssues {
     let stopLoad = false
 
     if (data.data.repository.issues.edges.length > 0) {
-      const apiPerf = Math.round(data.data.repository.issues.edges.length / (callDuration / 1000));
-      this.log('Latest call contained ' + data.data.repository.issues.edges.length + ' issues,  oldest: ' + format(parseISO(data.data.repository.issues.edges[0].node.updatedAt), 'LLL do yyyy') + ' download rate: ' + apiPerf + ' issues/s');
+      const apiPerf = Math.round(data.data.repository.issues.edges.length / (callDuration / 1000))
+      this.log('Latest call contained ' + data.data.repository.issues.edges.length + ' issues,  oldest: ' + format(parseISO(data.data.repository.issues.edges[0].node.updatedAt), 'LLL do yyyy') + ' download rate: ' + apiPerf + ' issues/s')
     }
 
     for (let currentIssue of data.data.repository.issues.edges) {
       if (recentIssue !== null && new Date(currentIssue.node.updatedAt).getTime() === new Date(recentIssue.updatedAt).getTime()) {
-        this.log('Issue already loaded, stopping entire load');
+        this.log('Issue already loaded, stopping entire load')
         // Issues are loaded from newest to oldest, when it gets to a point where updated date of a loaded issue
         // is equal to updated date of a local issue, it means there is no "new" content, but there might still be
         // issues that were not loaded for any reason. So the system only stops loaded if totalCount remote is equal
@@ -141,15 +137,15 @@ export default class FetchIssues {
         //if (data.data.repository.issues.totalCount === cfgIssues.find({'repo.id': repoObj.id}).count()) {
         //    stopLoad = true;
         //}
-        stopLoad = true;
+        stopLoad = true
       } else {
         let issueObj = JSON.parse(JSON.stringify(currentIssue.node)) //TODO - Replace this with something better to copy object ?
         issueObj.repo = repoObj
         issueObj.org = repoObj.org
-        this.fetchedIssues.push(issueObj);
-        lastCursor = currentIssue.cursor;
+        this.fetchedIssues.push(issueObj)
+        lastCursor = currentIssue.cursor
       }
-      lastCursor = currentIssue.cursor;
+      lastCursor = currentIssue.cursor
       if (stopLoad === true) {
         lastCursor = null
       }
