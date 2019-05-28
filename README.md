@@ -10,11 +10,25 @@ Grabs data from GitHub and pushes it to an Elasticsearch instance
 [![License](https://img.shields.io/npm/l/github-indexer.svg)](https://github.com/zencrepes/github-indexer/blob/master/package.json)
 
 <!-- toc -->
+* [Introduction](#introduction)
 * [Installation](#installation)
 * [Configuration](#configuration)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
+
+# Introduction
+<!-- introduction -->
+This script has been created to easily export Data from GitHub and import it into an Elasticsearch instance. 
+
+Whenever possible (i.e. issues, milestones, projects), it loads data sorted by the updated date in descending order (most recent first) and will stop as soon as it find the same node already in Elasticsearch. This way, first load takes some time, then you can just cron it to keep your Elasticsearch instance up to date. 
+
+The overall logic is articulated around 3 stages:
+ - Identify repositories to load data from (this is done through the ghRepos command => `github-indexer help ghRepos`) 
+ - Select which repository to load data from by editing `~/.config/github-indexer/repositories.yml` and applying the changes by running `github-indexer cfRepos`
+ - Load data from the selected repositories (for example `github-indexer ghIssues` to load issues)
+
+<!-- introduction -->
 
 # Installation
 <!-- installation -->
