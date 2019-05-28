@@ -73,26 +73,47 @@ export default class GhIssues extends Command {
 
     this.log('Starting to grab issues');
     for (let repo of activeRepos) {
-      //A - Fetch issues from GitHub into a large array
-      cli.action.start('Grabbing issues for: ' + repo.org.login + '/' + repo.name + ' (will fetch up to ' + repo.issues.totalCount + ' issues)')
-      let fetchedIssues = await fetchData.load(repo)
-      cli.action.stop(' done')
-
-      //B - Check if repo index exists, if not create
+      //A - Check if repo index exists, if not create
       const issuesIndex = (indexIssuePrefix + '_' + repo.org.login + '_' + repo.name).toLocaleLowerCase()
       const testIndex = await client.indices.exists({index: issuesIndex})
       if (testIndex.body === false) {
         cli.action.start('Elasticsearch Index ' + issuesIndex + ' does not exist, creating')
         const mappings = await loadYamlFile('./src/schemas/issues.yml')
         const settings = await loadYamlFile('./src/schemas/settings.yml')
-        const response = await client.indices.create({index: issuesIndex, body: {settings, mappings}})
-        console.log(JSON.stringify(response));
+        await client.indices.create({index: issuesIndex, body: {settings, mappings}})
         cli.action.stop(' created')
       }
 
-      //C - Break down the issues response in multiple batches
+      //B - Find the most recent issue
+      let searchResult = await client.search({
+        index: issuesIndex,
+        body: {
+          query: {
+            match_all: {}
+          },
+          size: 1,
+          sort: [
+            {
+              updatedAt: {
+                order: "desc"
+              }
+            }
+          ]
+        }
+      })
+      let recentIssue = null;
+      if (searchResult.body.hits.hits[0] !== undefined) {
+        recentIssue = searchResult.body.hits.hits[0]._source
+      }
+
+      //C - Fetch issues from GitHub into a large array
+      cli.action.start('Grabbing issues for: ' + repo.org.login + '/' + repo.name + ' (will fetch up to ' + repo.issues.totalCount + ' issues)')
+      let fetchedIssues = await fetchData.load(repo, recentIssue)
+      cli.action.stop(' done')
+
+      //D - Break down the issues response in multiple batches
       const esPayloadChunked = await this.chunkArray(fetchedIssues, 100)
-      //5- Push the results back to Elastic Search
+      //E- Push the results back to Elastic Search
       for (const [idx, esPayloadChunk] of esPayloadChunked.entries()) {
         cli.action.start('Submitting data to ElasticSearch into ' + issuesIndex + ' (' + parseInt(idx + 1, 10) + ' / ' + esPayloadChunked.length + ')')
         let formattedData = ''

@@ -63,9 +63,9 @@ export default class FetchIssues {
     })
   }
 
-  public async load(repo) {
+  public async load(repo, recentIssue) {
     this.fetchedIssues = []
-    await this.getIssuesPagination(null, 5, repo);
+    await this.getIssuesPagination(null, 5, repo, recentIssue);
     return this.fetchedIssues
   }
 
@@ -75,7 +75,7 @@ export default class FetchIssues {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  private async getIssuesPagination(cursor: any, increment: any, repoObj: any) {
+  private async getIssuesPagination(cursor: any, increment: any, repoObj: any, recentIssue: any) {
     if (this.errorRetry <= 3) {
       let data = {}
       let repositories = {}
@@ -102,15 +102,15 @@ export default class FetchIssues {
           this.rateLimit = data.data.rateLimit
         }
         //updateChip(data.data.rateLimit)
-        let lastCursor = await this.loadIssues(data, repoObj, callDuration)
+        let lastCursor = await this.loadIssues(data, repoObj, callDuration, recentIssue)
         let queryIncrement = calculateQueryIncrement(this.fetchedIssues.length, data.data.repository.issues.totalCount, this.maxQueryIncrement)
         this.log('Repo: ' + repoObj.org.login + '/' + repoObj.name + ' -> Fetched Count / Remote Count / Query Increment: ' + this.fetchedIssues.length + ' / ' + data.data.repository.issues.totalCount + ' / ' + queryIncrement)
         if (queryIncrement > 0 && lastCursor !== null) {
-          await this.getIssuesPagination(lastCursor, queryIncrement, repoObj)
+          await this.getIssuesPagination(lastCursor, queryIncrement, repoObj, recentIssue)
         }
       } else {
         this.errorRetry = this.errorRetry + 1
-        this.log('Error loading content, current count: ' + this.errorRetry)
+        this.log('Error loading content, current count: ' + this.errorRetry, recentIssue)
         await this.getIssuesPagination(cursor, increment, repoObj)
       }
     } else {
@@ -119,7 +119,7 @@ export default class FetchIssues {
     }
   }
 
-  private async loadIssues(data, repoObj, callDuration) {
+  private async loadIssues(data, repoObj, callDuration, recentIssue) {
 //    this.log('Loading from ' + OrgObj.login + ' organization')
     let lastCursor = null
     let stopLoad = false
@@ -129,9 +129,8 @@ export default class FetchIssues {
       this.log('Latest call contained ' + data.data.repository.issues.edges.length + ' issues,  oldest: ' + format(parseISO(data.data.repository.issues.edges[0].node.updatedAt), 'LLL do yyyy') + ' download rate: ' + apiPerf + ' issues/s');
     }
 
-    const exitsNodeUpdateAt = '';
     for (let currentIssue of data.data.repository.issues.edges) {
-      if (new Date(currentIssue.node.updatedAt).getTime() === new Date(exitsNodeUpdateAt).getTime()) {
+      if (recentIssue !== null && new Date(currentIssue.node.updatedAt).getTime() === new Date(recentIssue.updatedAt).getTime()) {
         this.log('Issue already loaded, stopping entire load');
         // Issues are loaded from newest to oldest, when it gets to a point where updated date of a loaded issue
         // is equal to updated date of a local issue, it means there is no "new" content, but there might still be
