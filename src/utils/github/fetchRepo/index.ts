@@ -68,7 +68,6 @@ export default class FetchRepo {
       this.rateLimit,
       this.log
     )
-
     if (data.data.repository !== null) {
       let repoObj = JSON.parse(JSON.stringify(data.data.repository)) //TODO - Replace this with something better to copy object ?
       repoObj.org = {
@@ -78,6 +77,8 @@ export default class FetchRepo {
         url: data.data.repository.owner.url,
       }
       this.fetchedRepos.push(repoObj)
+    } else {
+      this.log('ERROR: Either this repository does not exist, or you do not have the necessary permissions')
     }
 
     cli.action.stop(' completed')

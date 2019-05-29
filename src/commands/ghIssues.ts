@@ -5,6 +5,7 @@ import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
 import FetchIssues from '../utils/github/fetchIssues/index'
+import chunkArray from '../utils/misc/chunkArray'
 
 export default class GhIssues extends Command {
   static description = 'Fetch issues from GitHub'
@@ -108,7 +109,7 @@ export default class GhIssues extends Command {
       cli.action.stop(' done')
 
       //D - Break down the issues response in multiple batches
-      const esPayloadChunked = await this.chunkArray(fetchedIssues, 100)
+      const esPayloadChunked = await chunkArray(fetchedIssues, 100)
       //E- Push the results back to Elastic Search
       for (const [idx, esPayloadChunk] of esPayloadChunked.entries()) {
         cli.action.start('Submitting data to ElasticSearch into ' + issuesIndex + ' (' + parseInt(idx + 1, 10) + ' / ' + esPayloadChunked.length + ')')
@@ -125,15 +126,5 @@ export default class GhIssues extends Command {
         cli.action.stop(' done')
       }
     }
-  }
-
-  //https://ourcodeworld.com/articles/read/278/how-to-split-an-array-into-chunks-of-the-same-size-easily-in-javascript
-  async chunkArray(srcArray, chunkSize) {
-    let idx = 0
-    let tmpArray = []
-    for (idx = 0; idx < srcArray.length; idx += chunkSize) {
-      tmpArray.push(srcArray.slice(idx, idx + chunkSize))
-    }
-    return tmpArray
   }
 }

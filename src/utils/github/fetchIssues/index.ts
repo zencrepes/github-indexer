@@ -107,7 +107,7 @@ export default class FetchIssues {
       } else {
         this.errorRetry = this.errorRetry + 1
         this.log('Error loading content, current count: ' + this.errorRetry, recentIssue)
-        await this.getIssuesPagination(cursor, increment, repoObj)
+        await this.getIssuesPagination(cursor, increment, repoObj, recentIssue)
       }
     } else {
       this.log('Got too many load errors, stopping')
@@ -122,11 +122,10 @@ export default class FetchIssues {
 
     if (data.data.repository.issues.edges.length > 0) {
       const apiPerf = Math.round(data.data.repository.issues.edges.length / (callDuration / 1000))
-      this.log('Latest call contained ' + data.data.repository.issues.edges.length + ' issues,  oldest: ' + format(parseISO(data.data.repository.issues.edges[0].node.updatedAt), 'LLL do yyyy') + ' download rate: ' + apiPerf + ' issues/s')
+      this.log('Latest call contained ' + data.data.repository.issues.edges.length + ' issues, oldest: ' + format(parseISO(data.data.repository.issues.edges[0].node.updatedAt), 'LLL do yyyy') + ' download rate: ' + apiPerf + ' issues/s')
     }
-
     for (let currentIssue of data.data.repository.issues.edges) {
-      if (recentIssue !== null && new Date(currentIssue.node.updatedAt).getTime() === new Date(recentIssue.updatedAt).getTime()) {
+      if (recentIssue !== null && new Date(currentIssue.node.updatedAt).getTime() < new Date(recentIssue.updatedAt).getTime()) {
         this.log('Issue already loaded, stopping entire load')
         // Issues are loaded from newest to oldest, when it gets to a point where updated date of a loaded issue
         // is equal to updated date of a local issue, it means there is no "new" content, but there might still be

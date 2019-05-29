@@ -10,6 +10,7 @@ import * as path from 'path'
 import FetchAffiliated from '../utils/github/fetchAffiliated/index'
 import FetchOrg from '../utils/github/fetchOrg/index'
 import FetchRepo from '../utils/github/fetchRepo/index'
+import chunkArray from '../utils/misc/chunkArray'
 
 export default class GhRepos extends Command {
   static description = 'Fetch repositories from GitHub'
@@ -122,7 +123,7 @@ export default class GhRepos extends Command {
     this.log('About to submit (create or update) data about ' + esPayload.length + ' repo(s) to Elasticsearch')
 
     //Split the array in chunks of 100
-    const esPayloadChunked = await this.chunkArray(esPayload, 100)
+    const esPayloadChunked = await chunkArray(esPayload, 100)
     //5- Push the results back to Elastic Search
     for (const [idx, esPayloadChunk] of esPayloadChunked.entries()) {
       cli.action.start('Submitting data to ElasticSearch (' + parseInt(idx + 1, 10) + ' / ' + esPayloadChunked.length + ')')
@@ -176,15 +177,5 @@ export default class GhRepos extends Command {
     fs.writeFileSync(path.join(this.config.configDir, 'repositories.yml'), jsYaml.safeDump(configArray))
     cli.action.stop(' done')
     this.log('You can enable/disable repositories in: ' + path.join(this.config.configDir, 'repositories.yml'))
-  }
-
-  //https://ourcodeworld.com/articles/read/278/how-to-split-an-array-into-chunks-of-the-same-size-easily-in-javascript
-  async chunkArray(srcArray, chunkSize) {
-    let idx = 0
-    let tmpArray = []
-    for (idx = 0; idx < srcArray.length; idx += chunkSize) {
-      tmpArray.push(srcArray.slice(idx, idx + chunkSize))
-    }
-    return tmpArray
   }
 }
