@@ -3,30 +3,75 @@ import ApolloClient from 'apollo-client'
 import {ApolloLink, concat} from 'apollo-link'
 import {HttpLink} from 'apollo-link-http'
 import {format, parseISO} from 'date-fns'
-import {readFileSync} from 'fs'
+import {createWriteStream, readFileSync} from 'fs'
+//import { fetch } from 'apollo-env'
 import fetch from 'node-fetch'
 import {performance} from 'perf_hooks'
-import * as fsNdjson from 'fs-ndjson';
+import * as path from 'path'
 
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
-import * as path from "path";
+
+interface UserConfig {
+  fetch: {
+    max_nodes: string,
+  },
+  github: {
+    token: string,
+    login: string
+  }
+}
+
+interface Organization {
+  login: string,
+  id: string,
+}
+
+interface Repository {
+  name: string,
+  id: string,
+  org: Organization,
+  active: boolean
+}
+
+interface Issue {
+  title: string,
+  id: string,
+  repo: Repository,
+  org: Organization,
+  updatedAt: string,
+  createdAt: string,
+  closedAt: string | null,
+}
 
 export default class FetchIssues {
-  constructor(log: object, error: object, userConfig: object, configDir: string, cli: object) {
+  githubToken: string
+  githubLogin: string
+  maxQueryIncrement: number
+  configDir: string
+  log: any
+  cli: object
+  fetchedIssues: Array<object>
+  errorRetry: number
+  getIssues: string
+  rateLimit: {
+    limit: number,
+    cost: number,
+    remaining: number,
+    resetAt: string | null
+  }
+  client: object
+  cacheStream: any
+
+  constructor(log: object, userConfig: UserConfig, configDir: string, cli: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
-    this.maxQueryIncrement = userConfig.fetch.max_nodes
+    this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
     this.configDir = configDir
 
     this.log = log
-    this.error = error
     this.cli = cli
     this.fetchedIssues = []
-    this.githubOrgs = []
-    this.totalReposCount = 0
-    this.orgReposCount = {}
-    this.state = {}
     this.errorRetry = 0
     this.getIssues = readFileSync('./src/utils/github/graphql/getIssues.graphql', 'utf8')
 
@@ -37,7 +82,7 @@ export default class FetchIssues {
       resetAt: null
     }
 
-    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch})
+    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch: fetch as any})
     const cache = new InMemoryCache()
     //const cache = new InMemoryCache().restore(window.__APOLLO_STATE__)
 
@@ -48,14 +93,13 @@ export default class FetchIssues {
           authorization: this.githubToken ? `Bearer ${this.githubToken}` : '',
         }
       })
-      return forward(operation).map(response => {
+      return forward(operation).map((response: {errors: Array<object>, data: {errors: Array<object>}}) => {
         if (response.errors !== undefined && response.errors.length > 0) {
           response.data.errors = response.errors
         }
         return response
       })
     })
-
     this.client = new ApolloClient({
       link: concat(authMiddleware, httpLink),
       //link: authLink.concat(link),
@@ -63,9 +107,12 @@ export default class FetchIssues {
     })
   }
 
-  public async load(repo, recentIssue) {
+  public async load(repo: Repository, recentIssue: Issue | null) {
     this.fetchedIssues = []
+    //Create stream for writing issues to cache
+    this.cacheStream = createWriteStream(path.join(this.configDir + '/cache/', repo.org.login + '_' + repo.name + '.ndjson'), {flags: 'a'})
     await this.getIssuesPagination(null, 5, repo, recentIssue)
+    this.cacheStream.end()
     return this.fetchedIssues
   }
 
@@ -75,9 +122,9 @@ export default class FetchIssues {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  private async getIssuesPagination(cursor: any, increment: any, repoObj: any, recentIssue: any) {
+  private async getIssuesPagination(cursor: string | null, increment: number, repoObj: Repository, recentIssue: Issue | null) {
     if (this.errorRetry <= 3) {
-      let data = {}
+      let data: any = {}
       await this.sleep(1000) // Wait 2s between requests to avoid hitting GitHub API rate limit => https://developer.github.com/v3/guides/best-practices-for-integrators/
       const t0 = performance.now()
       try {
@@ -118,7 +165,7 @@ export default class FetchIssues {
     }
   }
 
-  private async loadIssues(data, repoObj, callDuration, recentIssue) {
+  private async loadIssues(data: any, repoObj: Repository, callDuration: number, recentIssue: Issue | null) {
 //    this.log('Loading from ' + OrgObj.login + ' organization')
     let lastCursor = null
     let stopLoad = false
@@ -146,8 +193,8 @@ export default class FetchIssues {
         issueObj.org = repoObj.org
         this.fetchedIssues.push(issueObj)
 
-        //Write the content to the cache file => TODO make it append, not overwrite
-        fsNdjson.writeFileSync(path.join(this.configDir + '/cache/', issueObj.org.login + '_' + issueObj.repo.name + '.ndjson'), JSON.stringify(issueObj), {flag: 'as'})
+        //Write the content to the cache file
+        this.cacheStream.write(JSON.stringify(issueObj) + '\n')
 
         lastCursor = currentIssue.cursor
       }

@@ -7,6 +7,82 @@ import * as path from 'path'
 import FetchIssues from '../utils/github/fetchIssues/index'
 import chunkArray from '../utils/misc/chunkArray'
 
+interface SearchResponse<T> {
+  hits: {
+    hits: Array<{
+      _source: T;
+    }>
+  }
+}
+
+// Define the interface of the source object
+interface Repository {
+  name: string,
+  url: string,
+  id: string,
+  databaseId: number,
+  diskUsage: number,
+  forkCount: number,
+  isPrivate: boolean,
+  isArchived: boolean,
+  owner: {
+    id: string,
+    login: string,
+    url: string,
+  },
+  issues: {
+    totalCount: number,
+    edges: Array<{
+      node: {
+        id: string,
+        updatedAt: string,
+        __typename: string
+      },
+      __typename: string
+    }>,
+    __typename: string
+  },
+  labels: {
+    totalCount: number,
+    __typename: string
+  },
+  milestones: {
+    totalCount: number,
+    __typename: string
+  },
+  pullRequests: {
+    totalCount: number,
+    __typename: string
+  },
+  releases: {
+    totalCount: number,
+    __typename: string
+  },
+  projects: {
+    totalCount: number,
+    __typename: string
+  },
+  __typename: string,
+  org: Organization,
+  active: boolean
+}
+
+interface Organization {
+  login: string,
+  id: string,
+}
+
+// Define the interface of the source object
+interface Issue {
+  title: string,
+  id: string,
+  repo: Repository,
+  org: Organization,
+  updatedAt: string,
+  createdAt: string,
+  closedAt: string | null,
+}
+
 export default class GhIssues extends Command {
   static description = 'Fetch issues from GitHub'
 
@@ -18,6 +94,13 @@ export default class GhIssues extends Command {
     help: flags.help({char: 'h'}),
   }
 
+  /*
+    The aim of this script is to fetch all issues associated with active repositories.
+    It does the following:
+     - Fetch a list of repositories from Elasticsearch
+     - Fetch updated issues for each repository
+     - Send back the content to Elasticsearch
+   */
   async run() {
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
     const es_port = userConfig.elasticsearch.port
@@ -45,7 +128,7 @@ export default class GhIssues extends Command {
 
     //2- Grab the active repositories from Elasticsearch
     cli.action.start('Grabbing the active repositories from ElasticSearch')
-    let esRepos = await client.search({
+    let esRepos: ApiResponse<SearchResponse<Repository>> = await client.search({
       index: reposIndexName,
       body: {
         from: 0,
@@ -66,7 +149,7 @@ export default class GhIssues extends Command {
     if (activeRepos.length === 0) {
       this.error('The script could not find any active repositories. Please use ghRepos and cfRepos first.', {exit: 1})
     }
-    const fetchData = new FetchIssues(this.log, this.error, userConfig, this.config.configDir, cli)
+    const fetchData = new FetchIssues(this.log, userConfig, this.config.configDir, cli)
 
     this.log('Starting to grab issues')
     for (let repo of activeRepos) {
@@ -82,7 +165,7 @@ export default class GhIssues extends Command {
       }
 
       //B - Find the most recent issue
-      let searchResult = await client.search({
+      let searchResult: ApiResponse<SearchResponse<Issue>> = await client.search({
         index: issuesIndex,
         body: {
           query: {
@@ -112,13 +195,13 @@ export default class GhIssues extends Command {
       const esPayloadChunked = await chunkArray(fetchedIssues, 100)
       //E- Push the results back to Elastic Search
       for (const [idx, esPayloadChunk] of esPayloadChunked.entries()) {
-        cli.action.start('Submitting data to ElasticSearch into ' + issuesIndex + ' (' + parseInt(idx + 1, 10) + ' / ' + esPayloadChunked.length + ')')
+        cli.action.start('Submitting data to ElasticSearch into ' + issuesIndex + ' (' + (idx + 1) + ' / ' + esPayloadChunked.length + ')')
         let formattedData = ''
         for (let rec of esPayloadChunk) {
           formattedData = formattedData + JSON.stringify({
             index: {
               _index: issuesIndex,
-              _id: rec.id
+              _id: (rec as Repository).id
             }
           }) + '\n' + JSON.stringify(rec) + '\n'
         }
