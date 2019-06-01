@@ -139,14 +139,14 @@ export default class CfRepos extends Command {
     cli.action.start('Comparing Elasticsearch data with flags in configuration file')
     const updatedData = esRepos.body.hits.hits.map((repo) => {
       //console.log(repo._source.org.login + '/' + repo._source.name);
-      const cfgRepo = _.find(reposConfig, (o: object) => o[repo._source.org.login + '/' + repo._source.name] !== undefined)
-      if (repo._source.active !== cfgRepo[repo._source.org.login + '/' + repo._source.name]) {
-        this.log('Changing: ' + repo._source.org.login + '/' + repo._source.name + ' from: ' + repo._source.active + ' to: ' + cfgRepo[repo._source.org.login + '/' + repo._source.name])
+      const cfgRepo = _.find(reposConfig, (o: object) => (o as any)[repo._source.org.login + '/' + repo._source.name] !== undefined)
+      if (repo._source.active !== (cfgRepo as any)[repo._source.org.login + '/' + repo._source.name]) {
+        this.log('Changing: ' + repo._source.org.login + '/' + repo._source.name + ' from: ' + repo._source.active + ' to: ' + (cfgRepo as any)[repo._source.org.login + '/' + repo._source.name])
       }
       //console.log(cfgRepo);
       return {
         ...repo._source,
-        active: cfgRepo[repo._source.org.login + '/' + repo._source.name]
+        active: (cfgRepo as any)[repo._source.org.login + '/' + repo._source.name]
       }
     })
     cli.action.stop(' done')
@@ -162,7 +162,7 @@ export default class CfRepos extends Command {
         formattedData = formattedData + JSON.stringify({
           index: {
             _index: reposIndexName,
-            _id: rec.id
+            _id: (rec as Repository).id
           }
         }) + '\n' + JSON.stringify(rec) + '\n'
       }

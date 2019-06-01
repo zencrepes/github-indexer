@@ -66,7 +66,7 @@ export default class GhIssues extends Command {
     if (activeRepos.length === 0) {
       this.error('The script could not find any active repositories. Please use ghRepos and cfRepos first.', {exit: 1})
     }
-    const fetchData = new FetchIssues(this.log, this.error, userConfig, cli)
+    const fetchData = new FetchIssues(this.log, this.error, userConfig, this.config.configDir, cli)
 
     this.log('Starting to grab issues')
     for (let repo of activeRepos) {

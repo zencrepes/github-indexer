@@ -6,15 +6,18 @@ import {format, parseISO} from 'date-fns'
 import {readFileSync} from 'fs'
 import fetch from 'node-fetch'
 import {performance} from 'perf_hooks'
+import * as fsNdjson from 'fs-ndjson';
 
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
+import * as path from "path";
 
 export default class FetchIssues {
-  constructor(log: object, error: object, userConfig: object, cli: object) {
+  constructor(log: object, error: object, userConfig: object, configDir: string, cli: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
     this.maxQueryIncrement = userConfig.fetch.max_nodes
+    this.configDir = configDir
 
     this.log = log
     this.error = error
@@ -142,6 +145,10 @@ export default class FetchIssues {
         issueObj.repo = repoObj
         issueObj.org = repoObj.org
         this.fetchedIssues.push(issueObj)
+
+        //Write the content to the cache file => TODO make it append, not overwrite
+        fsNdjson.writeFileSync(path.join(this.configDir + '/cache/', issueObj.org.login + '_' + issueObj.repo.name + '.ndjson'), JSON.stringify(issueObj), {flag: 'as'})
+
         lastCursor = currentIssue.cursor
       }
       lastCursor = currentIssue.cursor
