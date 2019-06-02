@@ -55,15 +55,15 @@ export default class GhRepos extends Command {
     let fetchedRepos = []
     if (grab === 'affiliated') {
       this.log('Starting to fetch data from affiliated organizations')
-      const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli)
+      const fetchData = new FetchAffiliated(this.log, userConfig, cli)
       fetchedRepos = await fetchData.load()
     } else if (grab === 'org' && org !== undefined) {
       this.log('Starting to fetch data from org: ' + org)
-      const fetchData = new FetchOrg(this.log, this.error, userConfig, cli)
+      const fetchData = new FetchOrg(this.log, userConfig, cli)
       fetchedRepos = await fetchData.load(org)
     } else if (grab === 'repo' && org !== undefined && repo !== undefined) {
       this.log('Starting to fetch data from repo: ' + org + '/' + repo)
-      const fetchData = new FetchRepo(this.log, this.error, userConfig, cli)
+      const fetchData = new FetchRepo(this.log, userConfig, cli)
       fetchedRepos = await fetchData.load(org, repo)
     }
 

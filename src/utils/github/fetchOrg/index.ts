@@ -9,19 +9,49 @@ import fetch from 'node-fetch'
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
 
+interface UserConfig {
+  fetch: {
+    max_nodes: string,
+  },
+  github: {
+    token: string,
+    login: string
+  }
+}
+
+interface Organization {
+  login: string,
+  id: string,
+}
+
 export default class FetchOrg {
-  constructor(log: object, error: object, userConfig: object, cli: object) {
+  githubToken: string
+  githubLogin: string
+  maxQueryIncrement: number
+  log: any
+  cli: object
+  fetchedRepos: Array<object>
+  totalReposCount: number
+  errorRetry: number
+  getReposExternal: string
+  getRepos: string
+  getUserRepos: string
+  rateLimit: {
+    limit: number,
+    cost: number,
+    remaining: number,
+    resetAt: string | null
+  }
+  client: object
+  constructor(log: object, userConfig: UserConfig, cli: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
-    this.maxQueryIncrement = userConfig.fetch.max_nodes
+    this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
 
     this.log = log
-    this.error = error
     this.cli = cli
     this.fetchedRepos = []
-    this.githubOrgs = []
     this.totalReposCount = 0
-    this.state = {}
     this.errorRetry = 0
     this.getReposExternal = readFileSync('./src/utils/github/graphql/getReposExternal.graphql', 'utf8')
     this.getRepos = readFileSync('./src/utils/github/graphql/getRepos.graphql', 'utf8')
@@ -34,7 +64,7 @@ export default class FetchOrg {
       resetAt: null
     }
 
-    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch})
+    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch: fetch as any})
     const cache = new InMemoryCache()
     //const cache = new InMemoryCache().restore(window.__APOLLO_STATE__)
 
@@ -45,7 +75,7 @@ export default class FetchOrg {
           authorization: this.githubToken ? `Bearer ${this.githubToken}` : '',
         }
       })
-      return forward(operation).map(response => {
+      return forward(operation).map((response: {errors: Array<object>, data: {errors: Array<object>}}) => {
         if (response.errors !== undefined && response.errors.length > 0) {
           response.data.errors = response.errors
         }
@@ -60,11 +90,11 @@ export default class FetchOrg {
     })
   }
 
-  public async load(login) {
+  public async load(login: string) {
     this.log('Started load')
 
     cli.action.start('Loading repositories for organization: ' + login)
-    await this.getReposPagination(null, 10, login)
+    await this.getReposPagination(null, 10, login, {})
     cli.action.stop(' completed')
     return this.fetchedRepos
   }
@@ -77,7 +107,7 @@ export default class FetchOrg {
 
   private async getReposPagination(cursor: any, increment: any, orgLogin: string, orgObj: object) {
     if (this.errorRetry <= 3) {
-      let data = {}
+      let data: any = {}
       await this.sleep(1000) // Wait 1s between requests to avoid hitting GitHub API rate limit => https://developer.github.com/v3/guides/best-practices-for-integrators/
       try {
         data = await graphqlQuery(
@@ -89,11 +119,6 @@ export default class FetchOrg {
         )
       } catch (error) {
         this.log(error)
-      }
-      if (data.data !== undefined && data.data.errors !== undefined && data.data.errors.length > 0) {
-        data.data.errors.forEach((error: object) => {
-          this.log(error.message)
-        })
       }
 //        this.log(data)
 //        this.log(orgObj)
@@ -125,9 +150,7 @@ export default class FetchOrg {
     }
   }
 
-  private async loadRepositories(data, orgObj) {
-//    this.log('Loading from ' + OrgObj.login + ' organization')
-
+  private async loadRepositories(data: any, orgObj: Organization) {
     let lastCursor = null
     for (let currentRepo of data.data.organization.repositories.edges) {
       let repoObj = JSON.parse(JSON.stringify(currentRepo.node)) //TODO - Replace this with something better to copy object ?
