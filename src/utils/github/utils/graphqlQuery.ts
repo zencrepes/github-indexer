@@ -10,7 +10,7 @@ async function graphqlQuery(client: any, query: any, variables: any, rateLimit: 
   // Logic to pause if remaining ratelimit is lower than 50
   if (rateLimit.remaining - rateLimit.cost < 50 && rateLimit.resetAt !== null) {
     log('No token available, will resuming querying after ' + rateLimit.resetAt)
-    const sleepDuration = parseInt((new Date(rateLimit.resetAt) - new Date()) / 1000, 10)
+    const sleepDuration = (new Date(rateLimit.resetAt).getTime() - new Date().getTime()) / 1000
     log('Will resume querying in: ' + sleepDuration + 's')
     await sleep(sleepDuration + 10000)
     log('Ready to resume querying')
@@ -24,7 +24,7 @@ async function graphqlQuery(client: any, query: any, variables: any, rateLimit: 
   })
 
   if (data.data !== undefined && data.data.errors !== undefined && data.data.errors.length > 0) {
-    data.data.errors.forEach((error: object) => {
+    data.data.errors.forEach((error: {message: string}) => {
       log(error.message)
     })
   }

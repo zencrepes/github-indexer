@@ -12,6 +12,14 @@ import FetchOrg from '../utils/github/fetchOrg/index'
 import FetchRepo from '../utils/github/fetchRepo/index'
 import chunkArray from '../utils/misc/chunkArray'
 
+interface SearchResponse<T> {
+  hits: {
+    hits: Array<{
+      _source: T;
+    }>
+  }
+}
+
 interface Organization {
   login: string,
   id: string,
@@ -143,7 +151,7 @@ export default class GhRepos extends Command {
 
     cli.action.start('Grabbing data from ElasticSearch and merging with new data')
     //3- Grab the repositories data from ElasticSearch
-    let esRepos = await client.search({
+    let esRepos: ApiResponse<SearchResponse<Repository>> = await client.search({
       index: reposIndexName,
       body: {
         from: 0,
@@ -155,7 +163,7 @@ export default class GhRepos extends Command {
     })
 
     //4- Loop through the newly grabbed data and see if there is a corresponding result in ES
-    let esPayload = []
+    let esPayload: Array<object> = []
     fetchedRepos.map((repo: Repository) => {
       const existingRepo = _.find(esRepos.body.hits.hits, {id: repo.id})
       const updatedRepo = {...repo}
