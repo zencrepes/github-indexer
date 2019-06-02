@@ -80,34 +80,106 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`github-indexer ghRepos [FLAGS]`](#github-indexer-ghRepos)
+* [`github-indexer cfRepos`](#github-indexer-cfrepos)
+* [`github-indexer esSchema [FILE]`](#github-indexer-esschema-file)
+* [`github-indexer ghIssues`](#github-indexer-ghissues)
+* [`github-indexer ghRepos`](#github-indexer-ghrepos)
 * [`github-indexer help [COMMAND]`](#github-indexer-help-command)
+
+## `github-indexer cfRepos`
+
+Enable/disable repositories by reading the configuration file
+
+```
+USAGE
+  $ github-indexer cfRepos
+
+OPTIONS
+  -h, --help  show CLI help
+
+EXAMPLE
+  $ github-indexer cfRepo
+```
+
+_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/cfRepos.ts)_
+
+## `github-indexer esSchema [FILE]`
+
+Create an index with a mapping in Elasticsearch
+
+```
+USAGE
+  $ github-indexer esSchema [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help                                                                 show CLI help
+
+  -i, --index=index                                                          (required) ES index to initialize the
+                                                                             mapping with
+
+  -m, --mapping=issues|labels|milestones|projects|pullrequests|repositories  (required) Mapping to use
+
+EXAMPLE
+  $ github-indexer es-schema -i issues
+```
+
+_See code: [src/commands/esSchema.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/esSchema.ts)_
+
+## `github-indexer ghIssues`
+
+Fetch issues from GitHub
+
+```
+USAGE
+  $ github-indexer ghIssues
+
+OPTIONS
+  -h, --help  show CLI help
+
+EXAMPLE
+  $ github-indexer ghIssues
+```
+
+_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghIssues.ts)_
 
 ## `github-indexer ghRepos`
 
-Grabs repositories and metadata from GitHub, a necessary step before being able to pull associated data such as Issues, Projects, PullRequests, ...
-
-Three options are available to the user:
-* Fetch repositories from organizations affiliated to the users' token
-* Fetch repositories from a specified organization
-* Fetch a single repository from a specified organization
-
-At the end of the process, a YAML file is generated and stored at `~/.config/github-indexer/repositories.yml`, this file can then be edited to specify which repositories should be used to automatically fetch data
+Fetch repositories from GitHub
 
 ```
 USAGE
   $ github-indexer ghRepos
 
 OPTIONS
-  -f, --force
+  -f, --force                     Make all fetched repositories active by default
   -g, --grab=affiliated|org|repo  (required) Select how to fetch repositories
   -h, --help                      show CLI help
   -o, --org=org                   GitHub organization login
   -r, --repo=repo                 GitHub repository name
 
 EXAMPLES
-  $ github-indexer ghRepos -g affiliated
-  $ github-indexer ghRepos -g org -o jetbrains
-  $ github-indexer ghRepos -g repo -o microsoft -r vscode
+  $ github-indexer ghRepo -g affiliated
+  $ github-indexer ghRepo -g org -o jetbrains
+  $ github-indexer ghRepo -g repo -o microsoft -r vscode
 ```
+
+_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghRepos.ts)_
+
+## `github-indexer help [COMMAND]`
+
+display help for github-indexer
+
+```
+USAGE
+  $ github-indexer help [COMMAND]
+
+ARGUMENTS
+  COMMAND  command to show help for
+
+OPTIONS
+  --all  see all commands in CLI
+```
+
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
 <!-- commandsstop -->
