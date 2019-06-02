@@ -10,7 +10,6 @@ import * as path from 'path'
 import FetchAffiliated from '../utils/github/fetchAffiliated/index'
 import FetchOrg from '../utils/github/fetchOrg/index'
 import FetchRepo from '../utils/github/fetchRepo/index'
-import initApolloClient from '../utils/github/utils/initApolloClient'
 import chunkArray from '../utils/misc/chunkArray'
 
 interface SearchResponse<T> {
@@ -115,21 +114,20 @@ export default class GhRepos extends Command {
     const es_port = userConfig.elasticsearch.port
     const es_host = userConfig.elasticsearch.host
     const reposIndexName = userConfig.elasticsearch.indices.repos
-    const apolloClient = await initApolloClient(userConfig.github.token)
 
     //1- Grab the repositories from GitHub
     let fetchedRepos: Array<any> = []
     if (grab === 'affiliated') {
       this.log('Starting to fetch data from affiliated organizations')
-      const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli, apolloClient)
+      const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli)
       fetchedRepos = await fetchData.load()
     } else if (grab === 'org' && org !== undefined) {
       this.log('Starting to fetch data from org: ' + org)
-      const fetchData = new FetchOrg(this.log, userConfig, cli, apolloClient)
+      const fetchData = new FetchOrg(this.log, userConfig, cli)
       fetchedRepos = await fetchData.load(org)
     } else if (grab === 'repo' && org !== undefined && repo !== undefined) {
       this.log('Starting to fetch data from repo: ' + org + '/' + repo)
-      const fetchData = new FetchRepo(this.log, userConfig, cli, apolloClient)
+      const fetchData = new FetchRepo(this.log, userConfig, cli)
       fetchedRepos = await fetchData.load(org, repo)
     }
 

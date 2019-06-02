@@ -16,8 +16,8 @@ async function initApolloClient(githubToken: string) {
         authorization: githubToken ? `Bearer ${githubToken}` : '',
       }
     })
-    return forward(operation).map((response: {errors: Array<object>, data: {errors: Array<object>}}) => {
-      if (response.errors.length > 0) {
+    return forward(operation).map((response: {errors: Array<object>, data: {errors: Array<object>}} | undefined) => {
+      if (response !== undefined && response.errors.length > 0) {
         response.data.errors = response.errors
       }
       return response

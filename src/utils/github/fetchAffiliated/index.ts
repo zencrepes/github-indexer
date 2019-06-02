@@ -1,6 +1,11 @@
+import {InMemoryCache} from 'apollo-cache-inmemory'
+import ApolloClient from 'apollo-client'
+import {ApolloLink, concat} from 'apollo-link'
+import {HttpLink} from 'apollo-link-http'
 import cli from 'cli-ux'
 import {readFileSync} from 'fs'
 import * as _ from 'lodash'
+import fetch from 'node-fetch'
 
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
@@ -51,7 +56,7 @@ export default class FetchAffiliated {
   }
   client: object
 
-  constructor(log: object, error: object, userConfig: UserConfig, cli: object, apolloClient: object) {
+  constructor(log: object, error: object, userConfig: UserConfig, cli: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
     this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
@@ -59,7 +64,6 @@ export default class FetchAffiliated {
     this.log = log
     this.error = error
     this.cli = cli
-    this.client = apolloClient
     this.fetchedRepos = []
     this.githubOrgs = []
     this.totalReposCount = 0
@@ -75,6 +79,30 @@ export default class FetchAffiliated {
       remaining: 5000,
       resetAt: null
     }
+    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch: fetch as any})
+    const cache = new InMemoryCache()
+    //const cache = new InMemoryCache().restore(window.__APOLLO_STATE__)
+
+    const authMiddleware = new ApolloLink((operation: any, forward: any) => {
+      // add the authorization to the headers
+      operation.setContext({
+        headers: {
+          authorization: this.githubToken ? `Bearer ${this.githubToken}` : '',
+        }
+      })
+      return forward(operation).map((response: {errors: Array<object> | undefined, data: {errors: Array<object>}}) => {
+        if (response.errors !== undefined && response.errors.length > 0) {
+          response.data.errors = response.errors
+        }
+        return response
+      })
+    })
+
+    this.client = new ApolloClient({
+      link: concat(authMiddleware, httpLink),
+      //link: authLink.concat(link),
+      cache,
+    })
   }
 
   public async load() {

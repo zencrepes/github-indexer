@@ -5,7 +5,6 @@ import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
 import FetchIssues from '../utils/github/fetchIssues/index'
-import initApolloClient from '../utils/github/utils/initApolloClient'
 import chunkArray from '../utils/misc/chunkArray'
 
 interface SearchResponse<T> {
@@ -108,7 +107,6 @@ export default class GhIssues extends Command {
     const es_host = userConfig.elasticsearch.host
     const reposIndexName = userConfig.elasticsearch.indices.repos
     const indexIssuePrefix = userConfig.elasticsearch.indices.issues
-    const apolloClient = await initApolloClient(userConfig.github.token)
 
     //1- Test if an index exists, if it does not, create it.
     cli.action.start('Checking if index: ' + reposIndexName + ' exists')
@@ -151,7 +149,7 @@ export default class GhIssues extends Command {
     if (activeRepos.length === 0) {
       this.error('The script could not find any active repositories. Please use ghRepos and cfRepos first.', {exit: 1})
     }
-    const fetchData = new FetchIssues(this.log, userConfig, this.config.configDir, cli, apolloClient)
+    const fetchData = new FetchIssues(this.log, userConfig, this.config.configDir, cli)
 
     this.log('Starting to grab issues')
     for (let repo of activeRepos) {

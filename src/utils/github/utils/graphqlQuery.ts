@@ -15,7 +15,6 @@ async function graphqlQuery(client: any, query: any, variables: any, rateLimit: 
     await sleep(sleepDuration + 10000)
     log('Ready to resume querying')
   }
-
   const data = await client.query({
     query: gql`${query}`,
     variables,
