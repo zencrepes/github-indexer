@@ -10,11 +10,56 @@ import fetch from 'node-fetch'
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
 
+interface UserConfig {
+  fetch: {
+    max_nodes: string,
+  },
+  github: {
+    token: string,
+    login: string
+  }
+}
+
+interface Organization {
+  login: string,
+  id: string,
+  __typename: string,
+}
+
+interface Repository {
+  name: string,
+  id: string,
+  org: Organization,
+  active: boolean
+}
+
 export default class FetchAffiliated {
-  constructor(log: object, error: object, userConfig: object, cli: object) {
+  githubToken: string
+  githubLogin: string
+  maxQueryIncrement: number
+  log: any
+  cli: object
+  error: any
+  fetchedRepos: Array<Repository>
+  githubOrgs: Array<Organization>
+  errorRetry: number
+  totalReposCount: number
+  orgReposCount: any
+  getOrgs: string
+  getRepos: string
+  getUserRepos: string
+  rateLimit: {
+    limit: number,
+    cost: number,
+    remaining: number,
+    resetAt: string | null
+  }
+  client: object
+
+  constructor(log: object, error: object, userConfig: UserConfig, cli: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
-    this.maxQueryIncrement = userConfig.fetch.max_nodes
+    this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
 
     this.log = log
     this.error = error
@@ -23,7 +68,6 @@ export default class FetchAffiliated {
     this.githubOrgs = []
     this.totalReposCount = 0
     this.orgReposCount = {}
-    this.state = {}
     this.errorRetry = 0
     this.getOrgs = readFileSync('./src/utils/github/graphql/getOrgs.graphql', 'utf8')
     this.getRepos = readFileSync('./src/utils/github/graphql/getRepos.graphql', 'utf8')
@@ -36,7 +80,7 @@ export default class FetchAffiliated {
       resetAt: null
     }
 
-    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch})
+    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch: fetch as any})
     const cache = new InMemoryCache()
     //const cache = new InMemoryCache().restore(window.__APOLLO_STATE__)
 
@@ -47,7 +91,7 @@ export default class FetchAffiliated {
           authorization: this.githubToken ? `Bearer ${this.githubToken}` : '',
         }
       })
-      return forward(operation).map(response => {
+      return forward(operation).map((response: {errors: Array<object>, data: {errors: Array<object>}}) => {
         if (response.errors !== undefined && response.errors.length > 0) {
           response.data.errors = response.errors
         }
@@ -82,7 +126,7 @@ export default class FetchAffiliated {
     }
 
     this.log('Initiate Users own Repositories load')
-    await this.getReposPagination(null, 20, {login: this.githubLogin}, 'user')
+    await this.getReposPagination(null, 20, {id: '', __typename: 'User', login: this.githubLogin}, 'user')
     this.log('Organizations Repositories loaded: ' + this.totalReposCount)
 
     return this.fetchedRepos
@@ -94,7 +138,7 @@ export default class FetchAffiliated {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  private async getOrgsPagination(cursor, increment) {
+  private async getOrgsPagination(cursor: string | null, increment: number) {
     const data = await graphqlQuery(
       this.client,
       this.getOrgs,
@@ -129,11 +173,11 @@ export default class FetchAffiliated {
     return lastCursor
   }
 
-  private async getReposPagination(cursor: any, increment: any, OrgObj: any, type: any) {
+  private async getReposPagination(cursor: string | null, increment: number, OrgObj: Organization, type: string) {
     if (this.errorRetry <= 3) {
       if (OrgObj !== null) {
-        let data = {}
-        let repositories = {}
+        let data: any = {}
+        let repositories: any = {}
         await this.sleep(1000) // Wait 2s between requests to avoid hitting GitHub API rate limit => https://developer.github.com/v3/guides/best-practices-for-integrators/
         try {
           if (type === 'org') {
@@ -158,11 +202,6 @@ export default class FetchAffiliated {
           }
         } catch (error) {
           this.log(error)
-        }
-        if (data.data !== undefined && data.data.errors !== undefined && data.data.errors.length > 0) {
-          data.data.errors.forEach((error: object) => {
-            this.log(error.message)
-          })
         }
 //        this.log(data)
 //        this.log(OrgObj)
@@ -193,7 +232,7 @@ export default class FetchAffiliated {
     }
   }
 
-  private async loadRepositories(repositories, OrgObj) {
+  private async loadRepositories(repositories: any, OrgObj: Organization) {
 //    this.log('Loading from ' + OrgObj.login + ' organization')
 
     let lastCursor = null
@@ -201,7 +240,7 @@ export default class FetchAffiliated {
       let repoObj = JSON.parse(JSON.stringify(currentRepo.node)) //TODO - Replace this with something better to copy object ?
       repoObj.org = OrgObj
 
-      const existingRepo = _.find(this.fetchedRepos, {id: repoObj.id})
+      const existingRepo = _.find(this.fetchedRepos, function (o) { return o.id === repoObj.id })
       //There are occurences where duplicate repos might be fetched (from the organizations, then from the user).
       //Skipping if coming from the user, giving higher priority to Organixation
       if (existingRepo !== undefined && (existingRepo.org.__typename === 'Organization' && OrgObj.__typename === 'User')) {

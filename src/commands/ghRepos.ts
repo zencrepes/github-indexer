@@ -116,7 +116,7 @@ export default class GhRepos extends Command {
     const reposIndexName = userConfig.elasticsearch.indices.repos
 
     //1- Grab the repositories from GitHub
-    let fetchedRepos = []
+    let fetchedRepos: Array<any> = []
     if (grab === 'affiliated') {
       this.log('Starting to fetch data from affiliated organizations')
       const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli)
@@ -165,11 +165,11 @@ export default class GhRepos extends Command {
     //4- Loop through the newly grabbed data and see if there is a corresponding result in ES
     let esPayload: Array<object> = []
     fetchedRepos.map((repo: Repository) => {
-      const existingRepo = _.find(esRepos.body.hits.hits, {id: repo.id})
+      const existingRepo = _.find(esRepos.body.hits.hits, function (o) { return o._source.id === repo.id })
       const updatedRepo = {...repo}
       if (existingRepo !== undefined) {
         //If the repo exist, we are only looking for the active flag
-        updatedRepo.active = existingRepo.active
+        updatedRepo.active = existingRepo._source.active
       } else {
         updatedRepo.active = false
       }
