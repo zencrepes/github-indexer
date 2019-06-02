@@ -12,6 +12,62 @@ import FetchOrg from '../utils/github/fetchOrg/index'
 import FetchRepo from '../utils/github/fetchRepo/index'
 import chunkArray from '../utils/misc/chunkArray'
 
+interface Organization {
+  login: string,
+  id: string,
+}
+
+interface Repository {
+  name: string,
+  url: string,
+  id: string,
+  databaseId: number,
+  diskUsage: number,
+  forkCount: number,
+  isPrivate: boolean,
+  isArchived: boolean,
+  owner: {
+    id: string,
+    login: string,
+    url: string,
+  },
+  issues: {
+    totalCount: number,
+    edges: Array<{
+      node: {
+        id: string,
+        updatedAt: string,
+        __typename: string
+      },
+      __typename: string
+    }>,
+    __typename: string
+  },
+  labels: {
+    totalCount: number,
+    __typename: string
+  },
+  milestones: {
+    totalCount: number,
+    __typename: string
+  },
+  pullRequests: {
+    totalCount: number,
+    __typename: string
+  },
+  releases: {
+    totalCount: number,
+    __typename: string
+  },
+  projects: {
+    totalCount: number,
+    __typename: string
+  },
+  __typename: string,
+  org: Organization,
+  active: boolean
+}
+
 export default class GhRepos extends Command {
   static description = 'Fetch repositories from GitHub'
 
@@ -55,7 +111,7 @@ export default class GhRepos extends Command {
     let fetchedRepos = []
     if (grab === 'affiliated') {
       this.log('Starting to fetch data from affiliated organizations')
-      const fetchData = new FetchAffiliated(this.log, userConfig, cli)
+      const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli)
       fetchedRepos = await fetchData.load()
     } else if (grab === 'org' && org !== undefined) {
       this.log('Starting to fetch data from org: ' + org)
@@ -100,7 +156,7 @@ export default class GhRepos extends Command {
 
     //4- Loop through the newly grabbed data and see if there is a corresponding result in ES
     let esPayload = []
-    fetchedRepos.map((repo: object) => {
+    fetchedRepos.map((repo: Repository) => {
       const existingRepo = _.find(esRepos.body.hits.hits, {id: repo.id})
       const updatedRepo = {...repo}
       if (existingRepo !== undefined) {
@@ -126,13 +182,13 @@ export default class GhRepos extends Command {
     const esPayloadChunked = await chunkArray(esPayload, 100)
     //5- Push the results back to Elastic Search
     for (const [idx, esPayloadChunk] of esPayloadChunked.entries()) {
-      cli.action.start('Submitting data to ElasticSearch (' + parseInt(idx + 1, 10) + ' / ' + esPayloadChunked.length + ')')
+      cli.action.start('Submitting data to ElasticSearch (' + (idx + 1) + ' / ' + esPayloadChunked.length + ')')
       let formattedData = ''
       for (let rec of esPayloadChunk) {
         formattedData = formattedData + JSON.stringify({
           index: {
             _index: reposIndexName,
-            _id: rec.id
+            _id: (rec as Repository).id
           }
         }) + '\n' + JSON.stringify(rec) + '\n'
       }

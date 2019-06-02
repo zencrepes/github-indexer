@@ -8,19 +8,41 @@ import fetch from 'node-fetch'
 
 import graphqlQuery from '../utils/graphqlQuery'
 
+interface UserConfig {
+  fetch: {
+    max_nodes: string,
+  },
+  github: {
+    token: string,
+    login: string
+  }
+}
+
 export default class FetchRepo {
-  constructor(log: object, error: object, userConfig: object, cli: object) {
+  githubToken: string
+  githubLogin: string
+  maxQueryIncrement: number
+  log: any
+  cli: object
+  fetchedRepos: Array<object>
+  errorRetry: number
+  getSingleRepo: string
+  rateLimit: {
+    limit: number,
+    cost: number,
+    remaining: number,
+    resetAt: string | null
+  }
+  client: object
+
+  constructor(log: object, userConfig: UserConfig, cli: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
-    this.maxQueryIncrement = userConfig.fetch.max_nodes
+    this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
 
     this.log = log
-    this.error = error
     this.cli = cli
     this.fetchedRepos = []
-    this.githubOrgs = []
-    this.totalReposCount = 0
-    this.state = {}
     this.errorRetry = 0
     this.getSingleRepo = readFileSync('./src/utils/github/graphql/getSingleRepo.graphql', 'utf8')
 
@@ -31,7 +53,7 @@ export default class FetchRepo {
       resetAt: null
     }
 
-    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch})
+    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch: fetch as any})
     const cache = new InMemoryCache()
     //const cache = new InMemoryCache().restore(window.__APOLLO_STATE__)
 
@@ -42,7 +64,7 @@ export default class FetchRepo {
           authorization: this.githubToken ? `Bearer ${this.githubToken}` : '',
         }
       })
-      return forward(operation).map(response => {
+      return forward(operation).map((response: {errors: Array<object>, data: {errors: Array<object>}}) => {
         if (response.errors !== undefined && response.errors.length > 0) {
           response.data.errors = response.errors
         }
@@ -57,7 +79,7 @@ export default class FetchRepo {
     })
   }
 
-  public async load(login, repo) {
+  public async load(login: string, repo: string) {
     this.log('Started load')
 
     cli.action.start('Loading repository: ' + login + '/' + repo)
