@@ -1,11 +1,5 @@
-import {InMemoryCache} from 'apollo-cache-inmemory'
-import ApolloClient from 'apollo-client'
-import {ApolloLink, concat} from 'apollo-link'
-import {HttpLink} from 'apollo-link-http'
 import {format, parseISO} from 'date-fns'
 import {createWriteStream, readFileSync} from 'fs'
-//import { fetch } from 'apollo-env'
-import fetch from 'node-fetch'
 import * as path from 'path'
 import {performance} from 'perf_hooks'
 
@@ -63,7 +57,7 @@ export default class FetchIssues {
   client: object
   cacheStream: any
 
-  constructor(log: object, userConfig: UserConfig, configDir: string, cli: object) {
+  constructor(log: object, userConfig: UserConfig, configDir: string, cli: object, apolloClient: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
     this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
@@ -71,6 +65,7 @@ export default class FetchIssues {
 
     this.log = log
     this.cli = cli
+    this.client = apolloClient
     this.fetchedIssues = []
     this.errorRetry = 0
     this.getIssues = readFileSync('./src/utils/github/graphql/getIssues.graphql', 'utf8')
@@ -81,30 +76,6 @@ export default class FetchIssues {
       remaining: 5000,
       resetAt: null
     }
-
-    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch: fetch as any})
-    const cache = new InMemoryCache()
-    //const cache = new InMemoryCache().restore(window.__APOLLO_STATE__)
-
-    const authMiddleware = new ApolloLink((operation: any, forward: any) => {
-      // add the authorization to the headers
-      operation.setContext({
-        headers: {
-          authorization: this.githubToken ? `Bearer ${this.githubToken}` : '',
-        }
-      })
-      return forward(operation).map((response: {errors: Array<object>, data: {errors: Array<object>}}) => {
-        if (response.errors !== undefined && response.errors.length > 0) {
-          response.data.errors = response.errors
-        }
-        return response
-      })
-    })
-    this.client = new ApolloClient({
-      link: concat(authMiddleware, httpLink),
-      //link: authLink.concat(link),
-      cache,
-    })
   }
 
   public async load(repo: Repository, recentIssue: Issue | null) {

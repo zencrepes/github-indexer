@@ -1,11 +1,6 @@
-import {InMemoryCache} from 'apollo-cache-inmemory'
-import ApolloClient from 'apollo-client'
-import {ApolloLink, concat} from 'apollo-link'
-import {HttpLink} from 'apollo-link-http'
 import cli from 'cli-ux'
 import {readFileSync} from 'fs'
 import * as _ from 'lodash'
-import fetch from 'node-fetch'
 
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
@@ -56,7 +51,7 @@ export default class FetchAffiliated {
   }
   client: object
 
-  constructor(log: object, error: object, userConfig: UserConfig, cli: object) {
+  constructor(log: object, error: object, userConfig: UserConfig, cli: object, apolloClient: object) {
     this.githubToken = userConfig.github.token
     this.githubLogin = userConfig.github.login
     this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
@@ -64,6 +59,7 @@ export default class FetchAffiliated {
     this.log = log
     this.error = error
     this.cli = cli
+    this.client = apolloClient
     this.fetchedRepos = []
     this.githubOrgs = []
     this.totalReposCount = 0
@@ -79,31 +75,6 @@ export default class FetchAffiliated {
       remaining: 5000,
       resetAt: null
     }
-
-    const httpLink = new HttpLink({uri: 'https://api.github.com/graphql', fetch: fetch as any})
-    const cache = new InMemoryCache()
-    //const cache = new InMemoryCache().restore(window.__APOLLO_STATE__)
-
-    const authMiddleware = new ApolloLink((operation: any, forward: any) => {
-      // add the authorization to the headers
-      operation.setContext({
-        headers: {
-          authorization: this.githubToken ? `Bearer ${this.githubToken}` : '',
-        }
-      })
-      return forward(operation).map((response: {errors: Array<object>, data: {errors: Array<object>}}) => {
-        if (response.errors !== undefined && response.errors.length > 0) {
-          response.data.errors = response.errors
-        }
-        return response
-      })
-    })
-
-    this.client = new ApolloClient({
-      link: concat(authMiddleware, httpLink),
-      //link: authLink.concat(link),
-      cache,
-    })
   }
 
   public async load() {
@@ -117,12 +88,9 @@ export default class FetchAffiliated {
 
     this.log('Initiate Organizations Repositories load')
     for (let OrgObj of this.githubOrgs) {
-      if (OrgObj !== null) {
-        cli.action.start('Loading repositories for organizations: ' + OrgObj.login)
-        await this.getReposPagination(null, 5, OrgObj, 'org')
-        cli.action.stop(' completed')
-
-      }
+      cli.action.start('Loading repositories for organizations: ' + OrgObj.login)
+      await this.getReposPagination(null, 5, OrgObj, 'org')
+      cli.action.stop(' completed')
     }
 
     this.log('Initiate Users own Repositories load')
@@ -175,56 +143,54 @@ export default class FetchAffiliated {
 
   private async getReposPagination(cursor: string | null, increment: number, OrgObj: Organization, type: string) {
     if (this.errorRetry <= 3) {
-      if (OrgObj !== null) {
-        let data: any = {}
-        let repositories: any = {}
-        await this.sleep(1000) // Wait 2s between requests to avoid hitting GitHub API rate limit => https://developer.github.com/v3/guides/best-practices-for-integrators/
-        try {
-          if (type === 'org') {
-            data = await graphqlQuery(
-              this.client,
-              this.getRepos,
-              {repo_cursor: cursor, increment, org_name: OrgObj.login},
-              this.rateLimit,
-              this.log
-            )
-            repositories = data.data.viewer.organization.repositories
-          } else {
-            data = await graphqlQuery(
-              this.client,
-              this.getUserRepos,
-              {repo_cursor: cursor, increment, login: OrgObj.login},
-              this.rateLimit,
-              this.log
-            )
-            OrgObj = data.data.user
-            repositories = data.data.viewer.repositories
-          }
-        } catch (error) {
-          this.log(error)
+      let data: any = {}
+      let repositories: any = {}
+      await this.sleep(1000) // Wait 2s between requests to avoid hitting GitHub API rate limit => https://developer.github.com/v3/guides/best-practices-for-integrators/
+      try {
+        if (type === 'org') {
+          data = await graphqlQuery(
+            this.client,
+            this.getRepos,
+            {repo_cursor: cursor, increment, org_name: OrgObj.login},
+            this.rateLimit,
+            this.log
+          )
+          repositories = data.data.viewer.organization.repositories
+        } else {
+          data = await graphqlQuery(
+            this.client,
+            this.getUserRepos,
+            {repo_cursor: cursor, increment, login: OrgObj.login},
+            this.rateLimit,
+            this.log
+          )
+          OrgObj = data.data.user
+          repositories = data.data.viewer.repositories
         }
+      } catch (error) {
+        this.log(error)
+      }
 //        this.log(data)
 //        this.log(OrgObj)
-        if (data.data !== undefined && data.data !== null) {
-          this.errorRetry = 0
-          if (this.orgReposCount[OrgObj.id] === undefined) {
-            this.orgReposCount[OrgObj.id] = 0
-          }
-          if (data.data.rateLimit !== undefined) {
-            this.rateLimit = data.data.rateLimit
-          }
-          //updateChip(data.data.rateLimit)
-          let lastCursor = await this.loadRepositories(repositories, OrgObj)
-          let queryIncrement = calculateQueryIncrement(this.orgReposCount[OrgObj.id], repositories.totalCount, this.maxQueryIncrement)
-          this.log('Org: ' + OrgObj.login + ' -> Fetched Count / Remote Count / Query Increment: ' + this.orgReposCount[OrgObj.id] + ' / ' + repositories.totalCount + ' / ' + queryIncrement)
-          if (queryIncrement > 0) {
-            await this.getReposPagination(lastCursor, queryIncrement, OrgObj, type)
-          }
-        } else {
-          this.errorRetry = this.errorRetry + 1
-          this.log('Error loading content, current count: ' + this.errorRetry)
-          await this.getReposPagination(cursor, increment, OrgObj, type)
+      if (data.data !== undefined && data.data !== null) {
+        this.errorRetry = 0
+        if (this.orgReposCount[OrgObj.id] === undefined) {
+          this.orgReposCount[OrgObj.id] = 0
         }
+        if (data.data.rateLimit !== undefined) {
+          this.rateLimit = data.data.rateLimit
+        }
+        //updateChip(data.data.rateLimit)
+        let lastCursor = await this.loadRepositories(repositories, OrgObj)
+        let queryIncrement = calculateQueryIncrement(this.orgReposCount[OrgObj.id], repositories.totalCount, this.maxQueryIncrement)
+        this.log('Org: ' + OrgObj.login + ' -> Fetched Count / Remote Count / Query Increment: ' + this.orgReposCount[OrgObj.id] + ' / ' + repositories.totalCount + ' / ' + queryIncrement)
+        if (queryIncrement > 0) {
+          await this.getReposPagination(lastCursor, queryIncrement, OrgObj, type)
+        }
+      } else {
+        this.errorRetry = this.errorRetry + 1
+        this.log('Error loading content, current count: ' + this.errorRetry)
+        await this.getReposPagination(cursor, increment, OrgObj, type)
       }
     } else {
       this.log('Got too many load errors, stopping')
