@@ -101,50 +101,147 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-Various commands are available, most of them should be straight-forward.
+* [`github-indexer cfRepos`](#github-indexer-cfrepos)
+* [`github-indexer ghIssues`](#github-indexer-ghissues)
+* [`github-indexer ghLabels`](#github-indexer-ghlabels)
+* [`github-indexer ghMilestones`](#github-indexer-ghmilestones)
+* [`github-indexer ghProjects`](#github-indexer-ghprojects)
+* [`github-indexer ghPullrequests`](#github-indexer-ghpullrequests)
+* [`github-indexer ghRepos`](#github-indexer-ghrepos)
+* [`github-indexer help [COMMAND]`](#github-indexer-help-command)
+* [`github-indexer init`](#github-indexer-init)
 
+## `github-indexer cfRepos`
 
-## `github-indexer help`
-
-Built-in help command
+Enable/disable repositories by reading the configuration file
 
 ```
-Grabs data from GitHub and pushes it to an Elasticsearch instance
-
-VERSION
-  github-indexer/0.0.1 darwin-x64 node-v11.11.0
-
 USAGE
-  $ github-indexer [COMMAND]
+  $ github-indexer cfRepos
 
-COMMANDS
-  cfRepos         Enable/disable repositories by reading the configuration file
-  ghIssues        Fetch issues from GitHub
-  ghLabels        Fetch labels from GitHub
-  ghMilestones    Fetch milestones from GitHub
-  ghProjects      Fetch projects from GitHub
-  ghPullrequests  Fetch Pull Requests (PRs) from GitHub
-  ghRepos         Fetch repositories from GitHub (FIRST STEP, start HERE)
-  help            display help for github-indexer
-  init            Initialize the configuration file
+OPTIONS
+  -h, --help       show CLI help
+  --eshost=eshost  Elastic search host
+  --esport=esport  Elastic search port
+  --esrepo=esrepo  Elastic index containing the GitHub repository
+  --gtoken=gtoken  GitHub user Token
+
+EXAMPLE
+  $ github-indexer cfRepo
 ```
 
-## `github-indexer help ghRepos`
+_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/cfRepos.ts)_
 
-ghRepos should be the first command you'd run after installing the indexer, it is used to fetch repositories details from GitHub.
+## `github-indexer ghIssues`
 
-Three options are available to grab repositories:
- - `affiliated`: Grab all repositories from organizations associates with the user
- - `org`: Grab all repositories from a specified organization
- - `repo`: Grab a particular repository from a specified organization.
- 
-Please note that `repo` will automatically enable the repository for data fetching.
-
-By default, repositories are disabled and can be enabled one by one by editing the configuration file located in: ~/.config/github-indexer/repositories.yml. You can also automatically enable all repositories by passing the `-f` flag to ghRepos. 
+Fetch issues from GitHub
 
 ```
+USAGE
+  $ github-indexer ghIssues
+
+OPTIONS
+  -h, --help       show CLI help
+  --eshost=eshost  Elastic search host
+  --esport=esport  Elastic search port
+  --esrepo=esrepo  Elastic index containing the GitHub repository
+  --gtoken=gtoken  GitHub user Token
+
+EXAMPLE
+  $ github-indexer ghIssues
+```
+
+_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghIssues.ts)_
+
+## `github-indexer ghLabels`
+
+Fetch labels from GitHub
+
+```
+USAGE
+  $ github-indexer ghLabels
+
+OPTIONS
+  -h, --help       show CLI help
+  --eshost=eshost  Elastic search host
+  --esport=esport  Elastic search port
+  --esrepo=esrepo  Elastic index containing the GitHub repository
+  --gtoken=gtoken  GitHub user Token
+
+EXAMPLE
+  $ github-indexer ghLabels
+```
+
+_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghLabels.ts)_
+
+## `github-indexer ghMilestones`
+
+Fetch milestones from GitHub
+
+```
+USAGE
+  $ github-indexer ghMilestones
+
+OPTIONS
+  -h, --help       show CLI help
+  --eshost=eshost  Elastic search host
+  --esport=esport  Elastic search port
+  --esrepo=esrepo  Elastic index containing the GitHub repository
+  --gtoken=gtoken  GitHub user Token
+
+EXAMPLE
+  $ github-indexer ghMilestones
+```
+
+_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghMilestones.ts)_
+
+## `github-indexer ghProjects`
+
+Fetch projects from GitHub
+
+```
+USAGE
+  $ github-indexer ghProjects
+
+OPTIONS
+  -h, --help       show CLI help
+  --eshost=eshost  Elastic search host
+  --esport=esport  Elastic search port
+  --esrepo=esrepo  Elastic index containing the GitHub repository
+  --gtoken=gtoken  GitHub user Token
+
+EXAMPLE
+  $ github-indexer ghIssues
+```
+
+_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghProjects.ts)_
+
+## `github-indexer ghPullrequests`
+
+Fetch Pull Requests (PRs) from GitHub
+
+```
+USAGE
+  $ github-indexer ghPullrequests
+
+OPTIONS
+  -h, --help       show CLI help
+  --eshost=eshost  Elastic search host
+  --esport=esport  Elastic search port
+  --esrepo=esrepo  Elastic index containing the GitHub repository
+  --gtoken=gtoken  GitHub user Token
+
+EXAMPLE
+  $ github-indexer ghPullrequests
+```
+
+_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghPullrequests.ts)_
+
+## `github-indexer ghRepos`
+
 Fetch repositories from GitHub (FIRST STEP, start HERE)
 
+```
 USAGE
   $ github-indexer ghRepos
 
@@ -165,4 +262,42 @@ EXAMPLES
   $ github-indexer ghRepo -g repo -o microsoft -r vscode
 ```
 
+_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghRepos.ts)_
+
+## `github-indexer help [COMMAND]`
+
+display help for github-indexer
+
+```
+USAGE
+  $ github-indexer help [COMMAND]
+
+ARGUMENTS
+  COMMAND  command to show help for
+
+OPTIONS
+  --all  see all commands in CLI
+```
+
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
+
+## `github-indexer init`
+
+Initialize the configuration file
+
+```
+USAGE
+  $ github-indexer init
+
+OPTIONS
+  --eshost=eshost  Elastic search host
+  --esport=esport  Elastic search port
+  --esrepo=esrepo  Elastic index containing the GitHub repository
+  --gtoken=gtoken  GitHub user Token
+
+EXAMPLE
+  $ github-indexer init
+```
+
+_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/init.ts)_
 <!-- commandsstop -->
