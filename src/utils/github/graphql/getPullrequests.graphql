@@ -74,6 +74,12 @@ query ($repo_cursor: String, $increment: Int, $org_name: String!, $repo_name: St
           participants(first: 1) {
             totalCount
           }
+          reviewRequests(first: 1) {
+            totalCount
+          }
+          reviews(first: 1) {
+            totalCount
+          }
           projectCards(first: 5) {
             totalCount
             edges {

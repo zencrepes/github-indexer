@@ -11,6 +11,8 @@ export default class EsSchema extends Command {
     '$ github-indexer es-schema -i issues',
   ]
 
+  static hidden = true
+
   static flags = {
     help: flags.help({char: 'h'}),
     mapping: flags.string({

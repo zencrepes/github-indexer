@@ -4,7 +4,7 @@ import cli from 'cli-ux'
 import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
-import FetchIssues from '../utils/github/fetchIssues/index'
+import FetchPullrequests from '../utils/github/FetchPullrequests/index'
 import chunkArray from '../utils/misc/chunkArray'
 
 interface SearchResponse<T> {
@@ -73,7 +73,7 @@ interface Organization {
 }
 
 // Define the interface of the source object
-interface Issue {
+interface Pullrequest {
   title: string,
   id: string,
   repo: Repository,
@@ -83,11 +83,11 @@ interface Issue {
   closedAt: string | null,
 }
 
-export default class GhIssues extends Command {
-  static description = 'Fetch issues from GitHub'
+export default class GhPullrequests extends Command {
+  static description = 'Fetch Pull Requests (PRs) from GitHub'
 
   static examples = [
-    '$ github-indexer ghIssues',
+    '$ github-indexer ghPullrequests',
   ]
 
   static flags = {
@@ -95,10 +95,10 @@ export default class GhIssues extends Command {
   }
 
   /*
-    The aim of this script is to fetch all issues associated with active repositories.
+    The aim of this script is to fetch all pullrequests associated with active repositories.
     It does the following:
      - Fetch a list of repositories from Elasticsearch
-     - Fetch updated issues for each repository
+     - Fetch updated pullrequests for each repository
      - Send back the content to Elasticsearch
    */
   async run() {
@@ -106,7 +106,7 @@ export default class GhIssues extends Command {
     const es_port = userConfig.elasticsearch.port
     const es_host = userConfig.elasticsearch.host
     const reposIndexName = userConfig.elasticsearch.indices.repos
-    const indexIssuePrefix = userConfig.elasticsearch.indices.issues
+    const indexPullrequestPrefix = userConfig.elasticsearch.indices.prs
 
     //1- Test if an index exists, if it does not, create it.
     cli.action.start('Checking if index: ' + reposIndexName + ' exists')
@@ -146,24 +146,24 @@ export default class GhIssues extends Command {
     if (activeRepos.length === 0) {
       this.error('The script could not find any active repositories. Please use ghRepos and cfRepos first.', {exit: 1})
     }
-    const fetchData = new FetchIssues(this.log, userConfig, this.config.configDir, cli)
+    const fetchData = new FetchPullrequests(this.log, userConfig, this.config.configDir, cli)
 
-    this.log('Starting to grab issues')
+    this.log('Starting to grab pullrequests')
     for (let repo of activeRepos) {
       //A - Check if repo index exists, if not create
-      const issuesIndex = (indexIssuePrefix + repo.org.login + '_' + repo.name).toLocaleLowerCase()
-      const testIndex = await client.indices.exists({index: issuesIndex})
+      const pullrequestsIndex = (indexPullrequestPrefix + repo.org.login + '_' + repo.name).toLocaleLowerCase()
+      const testIndex = await client.indices.exists({index: pullrequestsIndex})
       if (testIndex.body === false) {
-        cli.action.start('Elasticsearch Index ' + issuesIndex + ' does not exist, creating')
-        const mappings = await loadYamlFile('./src/schemas/issues.yml')
+        cli.action.start('Elasticsearch Index ' + pullrequestsIndex + ' does not exist, creating')
+        const mappings = await loadYamlFile('./src/schemas/pullrequests.yml')
         const settings = await loadYamlFile('./src/schemas/settings.yml')
-        await client.indices.create({index: issuesIndex, body: {settings, mappings}})
+        await client.indices.create({index: pullrequestsIndex, body: {settings, mappings}})
         cli.action.stop(' created')
       }
 
-      //B - Find the most recent issue
-      let searchResult: ApiResponse<SearchResponse<Issue>> = await client.search({
-        index: issuesIndex,
+      //B - Find the most recent pullrequest
+      let searchResult: ApiResponse<SearchResponse<Pullrequest>> = await client.search({
+        index: pullrequestsIndex,
         body: {
           query: {
             match_all: {}
@@ -178,31 +178,31 @@ export default class GhIssues extends Command {
           ]
         }
       })
-      let recentIssue = null
+      let recentPullrequest = null
       if (searchResult.body.hits.hits.length > 0) {
-        recentIssue = searchResult.body.hits.hits[0]._source
+        recentPullrequest = searchResult.body.hits.hits[0]._source
       }
 
-      //C - Fetch issues from GitHub into a large array
-      cli.action.start('Grabbing issues for: ' + repo.org.login + '/' + repo.name + ' (will fetch up to ' + repo.issues.totalCount + ' issues)')
-      let fetchedIssues = await fetchData.load(repo, recentIssue)
+      //C - Fetch pullrequests from GitHub into a large array
+      cli.action.start('Grabbing pullrequests for: ' + repo.org.login + '/' + repo.name + ' (will fetch up to ' + repo.pullRequests.totalCount + ' pullrequests)')
+      let fetchedPullrequests = await fetchData.load(repo, recentPullrequest)
       cli.action.stop(' done')
 
-      //D - Break down the issues response in multiple batches
-      const esPayloadChunked = await chunkArray(fetchedIssues, 100)
+      //D - Break down the pullrequests response in multiple batches
+      const esPayloadChunked = await chunkArray(fetchedPullrequests, 100)
       //E- Push the results back to Elastic Search
       for (const [idx, esPayloadChunk] of esPayloadChunked.entries()) {
-        cli.action.start('Submitting data to ElasticSearch into ' + issuesIndex + ' (' + (idx + 1) + ' / ' + esPayloadChunked.length + ')')
+        cli.action.start('Submitting data to ElasticSearch into ' + pullrequestsIndex + ' (' + (idx + 1) + ' / ' + esPayloadChunked.length + ')')
         let formattedData = ''
         for (let rec of esPayloadChunk) {
           formattedData = formattedData + JSON.stringify({
             index: {
-              _index: issuesIndex,
+              _index: pullrequestsIndex,
               _id: (rec as Repository).id
             }
           }) + '\n' + JSON.stringify(rec) + '\n'
         }
-        await client.bulk({index: issuesIndex, refresh: 'wait_for', body: formattedData})
+        await client.bulk({index: pullrequestsIndex, refresh: 'wait_for', body: formattedData})
         cli.action.stop(' done')
       }
     }
