@@ -79,10 +79,7 @@ export default class GhProjects extends Command {
     }
     const testIndex = await client.indices.exists({index: reposIndexName})
     if (testIndex.body === false) {
-      cli.action.start('Elasticsearch Index gh_repos does not exist, creating')
-      const mappings = await loadYamlFile('./src/schemas/repositories.yml')
-      const settings = await loadYamlFile('./src/schemas/settings.yml')
-      await client.indices.create({index: reposIndexName, body: {settings, mappings}})
+      this.error('Index: ' + reposIndexName + ' does not exists, please configure repositories first', {exit: 1})
     }
     cli.action.stop(' done')
 
@@ -175,7 +172,7 @@ export default class GhProjects extends Command {
 
       // B - Second, fetch projects at the repository level
       // B.1 - Test if index exists, if not, create
-      const projectsIndex = (indexProjectPrefix + '_' + repo.org.login + '_' + repo.name).toLocaleLowerCase()
+      const projectsIndex = (indexProjectPrefix + repo.org.login + '_' + repo.name).toLocaleLowerCase()
       const testIndex = await client.indices.exists({index: projectsIndex})
       if (testIndex.body === false) {
         cli.action.start('Elasticsearch Index ' + projectsIndex + ' does not exist, creating')
