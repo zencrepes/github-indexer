@@ -1,11 +1,10 @@
-import Command, {flags} from '@oclif/command'
+import Command from '@oclif/command'
 import * as fs from 'fs'
 import * as jsYaml from 'js-yaml'
 import * as path from 'path'
 
 export default abstract class extends Command {
   static flags = {
-    loglevel: flags.string({options: ['error', 'warn', 'info', 'debug']})
   }
 
   async init() {

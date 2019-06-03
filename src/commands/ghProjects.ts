@@ -1,9 +1,10 @@
 import {ApiResponse, Client} from '@elastic/elasticsearch'
-import {Command, flags} from '@oclif/command'
+import {flags} from '@oclif/command'
 import cli from 'cli-ux'
 import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
+import Command from '../base'
 import FetchProjects from '../utils/github/fetchProjects/index'
 import chunkArray from '../utils/misc/chunkArray'
 

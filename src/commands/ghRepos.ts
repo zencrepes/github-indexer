@@ -1,5 +1,5 @@
 import {ApiResponse, Client} from '@elastic/elasticsearch'
-import {Command, flags} from '@oclif/command'
+import {flags} from '@oclif/command'
 import cli from 'cli-ux'
 import * as fs from 'fs'
 import * as jsYaml from 'js-yaml'
@@ -7,6 +7,7 @@ import * as loadYamlFile from 'load-yaml-file'
 import * as _ from 'lodash'
 import * as path from 'path'
 
+import Command from '../base'
 import FetchAffiliated from '../utils/github/fetchAffiliated/index'
 import FetchOrg from '../utils/github/fetchOrg/index'
 import FetchRepo from '../utils/github/fetchRepo/index'
@@ -86,6 +87,7 @@ export default class GhRepos extends Command {
   ]
 
   static flags = {
+    ...Command.flags,
     help: flags.help({char: 'h'}),
     grab: flags.string({
       char: 'g',
