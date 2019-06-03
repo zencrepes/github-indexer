@@ -26,7 +26,12 @@ Whenever possible (i.e. issues, milestones, projects), it loads data sorted by t
 The overall logic is articulated around 3 stages:
  - Identify repositories to load data from (this is done through the ghRepos command => `github-indexer help ghRepos`) 
  - Select which repository to load data from by editing `~/.config/github-indexer/repositories.yml` and applying the changes by running `github-indexer cfRepos`
+    - _or force repos to be active during initial fetch by running ghRepos with the -f flag:_ `github-indexer ghRepos YOUR_OPTIONS -f`
  - Load data from the selected repositories (for example `github-indexer ghIssues` to load issues)
+
+You can then re-run the scripts at regular interval to fetch the updated nodes.
+
+Note: GitHub doesn't provide a mechanism to fetch new or updated labels so the script will (flush the index and)load all labels every time `ghLabels` is executed.
 
 <!-- introduction -->
 
@@ -40,16 +45,32 @@ npm install -g github-indexer
 
 # Configuration
 <!-- configuration -->
+A configuration file with default settings is automatically generated in `~/.config/github-indexer/config.yml` the first time you run the indexer. 
+
+Environment variable are also available for some of the configuration settings:
+ - ES_HOST: Elasticsearch host
+ - ES_PORT: Elasticsearch port
+ - ES_REPO: Elasticsearch index containing the repository configuration
+ - GITHUB_TOKEN: GitHub token for fetching data.
+
+Environment variable will take precedence over the corresponding settings in the configuration file.
+
 Configuration is stored in `~/.config/github-indexer/config.yml`, it contains the following settings;
 ```yaml
 elasticsearch:
-  port: 9200
-  host: 'http://127.0.0.1'
+  port: 9200                        # Eleasticsearch port
+  host: 'http://127.0.0.1'          # Eleasticsearch host
+  indices:
+    repos: 'gh_repos'               # Eleasticsearch index containing repository configuration
+    issues: 'gh_issues_'            # Prefix for the Elasticsearch index containing issues, one index is created per repository, eg: gh_issues_ORG_REPO
+    projects: 'gh_projects_'        # Prefix for the Elasticsearch index containing projects, one index is created for org-level project and one per repository, eg: gh_projects_ORG_REPO
+    labels: 'gh_labels_'            # Prefix for the Elasticsearch index containing labels, one index is created per repository, eg: gh_labels_ORG_REPO
+    milestones: 'gh_milestones_'    # Prefix for the Elasticsearch index containing milestones, one index is created per repository, eg: gh_milestones_ORG_REPO
+    prs: 'gh_prs_'                  # Prefix for the Elasticsearch index containing pull requests, one index is created per repository, eg: gh_prs_ORG_REPO
 fetch:
-  max_nodes: 30
+  max_nodes: 30                     # Number of nodes to request from GitHub Graphql API (max: 100), avoid using too high of a number of large repositories
 github:
-  username: 'YOUR_USERNAME'
-  token: 'TOKEN_HERE'
+  token: 'TOKEN_HERE'               # GitHub authorization token
 ```
 
 All of the configuration settings should be self-explanatory with the exception of `max_nodes`, which is used to indicate how many root nodes should be fetched from GitHub graphql's API. The maximum number supported by GitHub is 100, but please note that GitHub's GraphQL API can be unstable with large repositories, it is recommended to keep that number around 30 -> 50. A smaller number triggers more smaller call, a larger number triggers less larger calls.
@@ -80,74 +101,50 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`github-indexer cfRepos`](#github-indexer-cfrepos)
-* [`github-indexer esSchema [FILE]`](#github-indexer-esschema-file)
-* [`github-indexer ghIssues`](#github-indexer-ghissues)
-* [`github-indexer ghRepos`](#github-indexer-ghrepos)
-* [`github-indexer help [COMMAND]`](#github-indexer-help-command)
+Various commands are available, most of them should be straight-forward.
 
-## `github-indexer cfRepos`
 
-Enable/disable repositories by reading the configuration file
+## `github-indexer help`
+
+Built-in help command
 
 ```
+Grabs data from GitHub and pushes it to an Elasticsearch instance
+
+VERSION
+  github-indexer/0.0.1 darwin-x64 node-v11.11.0
+
 USAGE
-  $ github-indexer cfRepos
+  $ github-indexer [COMMAND]
 
-OPTIONS
-  -h, --help  show CLI help
-
-EXAMPLE
-  $ github-indexer cfRepo
+COMMANDS
+  cfRepos         Enable/disable repositories by reading the configuration file
+  ghIssues        Fetch issues from GitHub
+  ghLabels        Fetch labels from GitHub
+  ghMilestones    Fetch milestones from GitHub
+  ghProjects      Fetch projects from GitHub
+  ghPullrequests  Fetch Pull Requests (PRs) from GitHub
+  ghRepos         Fetch repositories from GitHub (FIRST STEP, start HERE)
+  help            display help for github-indexer
+  init            Initialize the configuration file
 ```
 
-_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/cfRepos.ts)_
+## `github-indexer help ghRepos`
 
-## `github-indexer esSchema [FILE]`
+ghRepos should be the first command you'd run after installing the indexer, it is used to fetch repositories details from GitHub.
 
-Create an index with a mapping in Elasticsearch
+Three options are available to grab repositories:
+ - `affiliated`: Grab all repositories from organizations associates with the user
+ - `org`: Grab all repositories from a specified organization
+ - `repo`: Grab a particular repository from a specified organization.
+ 
+Please note that `repo` will automatically enable the repository for data fetching.
 
-```
-USAGE
-  $ github-indexer esSchema [FILE]
-
-OPTIONS
-  -f, --force
-  -h, --help                                                                 show CLI help
-
-  -i, --index=index                                                          (required) ES index to initialize the
-                                                                             mapping with
-
-  -m, --mapping=issues|labels|milestones|projects|pullrequests|repositories  (required) Mapping to use
-
-EXAMPLE
-  $ github-indexer es-schema -i issues
-```
-
-_See code: [src/commands/esSchema.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/esSchema.ts)_
-
-## `github-indexer ghIssues`
-
-Fetch issues from GitHub
+By default, repositories are disabled and can be enabled one by one by editing the configuration file located in: ~/.config/github-indexer/repositories.yml. You can also automatically enable all repositories by passing the `-f` flag to ghRepos. 
 
 ```
-USAGE
-  $ github-indexer ghIssues
+Fetch repositories from GitHub (FIRST STEP, start HERE)
 
-OPTIONS
-  -h, --help  show CLI help
-
-EXAMPLE
-  $ github-indexer ghIssues
-```
-
-_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghIssues.ts)_
-
-## `github-indexer ghRepos`
-
-Fetch repositories from GitHub
-
-```
 USAGE
   $ github-indexer ghRepos
 
@@ -157,6 +154,10 @@ OPTIONS
   -h, --help                      show CLI help
   -o, --org=org                   GitHub organization login
   -r, --repo=repo                 GitHub repository name
+  --eshost=eshost                 Elastic search host
+  --esport=esport                 Elastic search port
+  --esrepo=esrepo                 Elastic index containing the GitHub repository
+  --gtoken=gtoken                 GitHub user Token
 
 EXAMPLES
   $ github-indexer ghRepo -g affiliated
@@ -164,22 +165,4 @@ EXAMPLES
   $ github-indexer ghRepo -g repo -o microsoft -r vscode
 ```
 
-_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.1/src/commands/ghRepos.ts)_
-
-## `github-indexer help [COMMAND]`
-
-display help for github-indexer
-
-```
-USAGE
-  $ github-indexer help [COMMAND]
-
-ARGUMENTS
-  COMMAND  command to show help for
-
-OPTIONS
-  --all  see all commands in CLI
-```
-
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
 <!-- commandsstop -->

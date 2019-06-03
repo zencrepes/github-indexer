@@ -28,18 +28,7 @@ interface Organization {
 
 interface Repository {
   name: string,
-  url: string,
   id: string,
-  databaseId: number,
-  diskUsage: number,
-  forkCount: number,
-  isPrivate: boolean,
-  isArchived: boolean,
-  owner: {
-    id: string,
-    login: string,
-    url: string,
-  },
   issues: {
     totalCount: number,
     edges: Array<{
@@ -48,37 +37,14 @@ interface Repository {
         updatedAt: string,
         __typename: string
       },
-      __typename: string
     }>,
-    __typename: string
   },
-  labels: {
-    totalCount: number,
-    __typename: string
-  },
-  milestones: {
-    totalCount: number,
-    __typename: string
-  },
-  pullRequests: {
-    totalCount: number,
-    __typename: string
-  },
-  releases: {
-    totalCount: number,
-    __typename: string
-  },
-  projects: {
-    totalCount: number,
-    __typename: string
-  },
-  __typename: string,
   org: Organization,
   active: boolean
 }
 
 export default class GhRepos extends Command {
-  static description = 'Fetch repositories from GitHub'
+  static description = 'Fetch repositories from GitHub (FIRST STEP, start HERE)'
 
   static examples = [
     '$ github-indexer ghRepo -g affiliated',
@@ -111,11 +77,11 @@ export default class GhRepos extends Command {
 
   async run() {
     const {flags} = this.parse(GhRepos)
-    const {grab, org, repo, force} = flags
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
-    const es_port = userConfig.elasticsearch.port
-    const es_host = userConfig.elasticsearch.host
-    const reposIndexName = userConfig.elasticsearch.indices.repos
+    const {grab, org, repo, force, esport, eshost, esrepo} = flags
+    const es_port = (esport !== undefined ? esport : userConfig.elasticsearch.port)
+    const es_host = (eshost !== undefined ? eshost : userConfig.elasticsearch.host)
+    const reposIndexName = (esrepo !== undefined ? esrepo : userConfig.elasticsearch.indices.repos)
 
     //1- Grab the repositories from GitHub
     let fetchedRepos: Array<any> = []

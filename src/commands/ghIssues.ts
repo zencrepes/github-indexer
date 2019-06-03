@@ -92,6 +92,7 @@ export default class GhIssues extends Command {
   ]
 
   static flags = {
+    ...Command.flags,
     help: flags.help({char: 'h'}),
   }
 
@@ -103,10 +104,12 @@ export default class GhIssues extends Command {
      - Send back the content to Elasticsearch
    */
   async run() {
+    const {flags} = this.parse(GhIssues)
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
-    const es_port = userConfig.elasticsearch.port
-    const es_host = userConfig.elasticsearch.host
-    const reposIndexName = userConfig.elasticsearch.indices.repos
+    const {esport, eshost, esrepo} = flags
+    const es_port = (esport !== undefined ? esport : userConfig.elasticsearch.port)
+    const es_host = (eshost !== undefined ? eshost : userConfig.elasticsearch.host)
+    const reposIndexName = (esrepo !== undefined ? esrepo : userConfig.elasticsearch.indices.repos)
     const indexIssuePrefix = userConfig.elasticsearch.indices.issues
 
     //1- Test if an index exists, if it does not, create it.

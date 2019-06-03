@@ -1,10 +1,33 @@
-import Command from '@oclif/command'
+import Command, {flags} from '@oclif/command'
 import * as fs from 'fs'
 import * as jsYaml from 'js-yaml'
 import * as path from 'path'
 
 export default abstract class extends Command {
   static flags = {
+    esport: flags.string({
+      required: false,
+      env: 'ES_PORT',
+      description: 'Elastic search port'
+    }),
+    eshost: flags.string({
+      required: false,
+      env: 'ES_HOST',
+      // tslint:disable-next-line:no-http-string
+      description: 'Elastic search host'
+    }),
+    esrepo: flags.string({
+      required: false,
+      env: 'ES_REPO',
+      // tslint:disable-next-line:no-http-string
+      description: 'Elastic index containing the GitHub repository'
+    }),
+    gtoken: flags.string({
+      required: false,
+      env: 'GITHUB_TOKEN',
+      // tslint:disable-next-line:no-http-string
+      description: 'GitHub user Token'
+    }),
   }
 
   async init() {
@@ -28,12 +51,11 @@ export default abstract class extends Command {
           max_nodes: 30
         },
         github: {
-          username: 'YOUR_USERNAME',
           token: 'TOKEN_HERE'
         }
       }
       fs.writeFileSync(path.join(this.config.configDir, 'config.yml'), jsYaml.safeDump(defaultConfig))
-      this.log('Initialized configuration file in: ' + path.join(this.config.configDir, 'config.yml'))
+      this.log('Initialized configuration file with defaults in: ' + path.join(this.config.configDir, 'config.yml'))
     } else {
       this.log('Configuration file exists: ' + path.join(this.config.configDir, 'config.yml'))
     }

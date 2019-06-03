@@ -17,21 +17,14 @@ interface SearchResponse<T> {
   }
 }
 
+interface Organization {
+  login: string,
+  id: string,
+}
 // Define the interface of the source object
 interface Repository {
   name: string,
-  url: string,
   id: string,
-  databaseId: number,
-  diskUsage: number,
-  forkCount: number,
-  isPrivate: boolean,
-  isArchived: boolean,
-  owner: {
-    id: string,
-    login: string,
-    url: string,
-  },
   issues: {
     totalCount: number,
     edges: Array<{
@@ -40,36 +33,9 @@ interface Repository {
         updatedAt: string,
         __typename: string
       },
-      __typename: string
     }>,
-    __typename: string
   },
-  labels: {
-    totalCount: number,
-    __typename: string
-  },
-  milestones: {
-    totalCount: number,
-    __typename: string
-  },
-  pullRequests: {
-    totalCount: number,
-    __typename: string
-  },
-  releases: {
-    totalCount: number,
-    __typename: string
-  },
-  projects: {
-    totalCount: number,
-    __typename: string
-  },
-  __typename: string,
-  org: {
-    login: string,
-    name: string,
-    id: string
-  },
+  org: Organization,
   active: boolean
 }
 
@@ -81,6 +47,7 @@ export default class CfRepos extends Command {
   ]
 
   static flags = {
+    ...Command.flags,
     help: flags.help({char: 'h'}),
   }
   /*
@@ -91,10 +58,12 @@ export default class CfRepos extends Command {
      - Send back the content to Elasticsearch
    */
   async run() {
+    const {flags} = this.parse(CfRepos)
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
-    const es_port = userConfig.elasticsearch.port
-    const es_host = userConfig.elasticsearch.host
-    const reposIndexName = userConfig.elasticsearch.indices.repos
+    const {esport, eshost, esrepo} = flags
+    const es_port = (esport !== undefined ? esport : userConfig.elasticsearch.port)
+    const es_host = (eshost !== undefined ? eshost : userConfig.elasticsearch.host)
+    const reposIndexName = (esrepo !== undefined ? esrepo : userConfig.elasticsearch.indices.repos)
 
     //1- Test if an index exists, if it does not, exit.
     cli.action.start('Checking if index: ' + reposIndexName + ' exists')
