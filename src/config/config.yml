@@ -4,6 +4,10 @@ elasticsearch:
   indices:
     repos: 'gh_repos'
     issues: 'gh_issues_'
+    projects: 'gh_projects_'
+    labels: 'gh_labels_'
+    milestones: 'gh_milestones_'
+    prs: 'gh_prs_'
 fetch:
   max_nodes: 30
 github:

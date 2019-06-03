@@ -125,7 +125,7 @@ export default class FetchIssues {
   private async getIssuesPagination(cursor: string | null, increment: number, repoObj: Repository, recentIssue: Issue | null) {
     if (this.errorRetry <= 3) {
       let data: any = {}
-      await this.sleep(1000) // Wait 2s between requests to avoid hitting GitHub API rate limit => https://developer.github.com/v3/guides/best-practices-for-integrators/
+      await this.sleep(1000) // Wait 1s between requests to avoid hitting GitHub API rate limit => https://developer.github.com/v3/guides/best-practices-for-integrators/
       const t0 = performance.now()
       try {
         data = await graphqlQuery(

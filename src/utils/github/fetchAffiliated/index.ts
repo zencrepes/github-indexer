@@ -112,12 +112,10 @@ export default class FetchAffiliated {
     await this.getOrgsPagination(null, 5)
     cli.action.stop(this.githubOrgs.length + ' found')
 
-    //this.log(this.githubOrgs)
-
     this.log('Initiate Organizations Repositories load')
-    for (let OrgObj of this.githubOrgs) {
-      cli.action.start('Loading repositories for organizations: ' + OrgObj.login)
-      await this.getReposPagination(null, 5, OrgObj, 'org')
+    for (let orgObj of this.githubOrgs) {
+      cli.action.start('Loading repositories for organizations: ' + orgObj.login)
+      await this.getReposPagination(null, 5, orgObj, 'org')
       cli.action.stop(' completed')
     }
 
@@ -163,8 +161,10 @@ export default class FetchAffiliated {
   private async loadOrganizations(data: any) {
     let lastCursor = null
     for (let currentOrg of data.data.viewer.organizations.edges) {
-      this.githubOrgs.push(currentOrg.node)
-      lastCursor = currentOrg.cursor
+      if (currentOrg.node !== null) {
+        this.githubOrgs.push(currentOrg.node)
+        lastCursor = currentOrg.cursor
+      }
     }
     return lastCursor
   }
