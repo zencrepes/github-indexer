@@ -45,8 +45,6 @@ workflows:
   version: 2
   "github-indexer":
     jobs:
-      - node-latest
-      - node-8
       - node-10
       - cache:
           filters:
