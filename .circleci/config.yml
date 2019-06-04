@@ -14,11 +14,21 @@ jobs:
       - run:
           name: Install dependencies
           command: yarn
-      - run: ./bin/run --version
-      - run: ./bin/run --help
       - run:
-          name: Testing
-          command: npm test
+          name: Display version
+          command: ./bin/run --version
+      - run: Display help
+          name: Display version
+          command: ./bin/run --help
+      - run: Init app
+          name: Display version
+          command: ./bin/run init
+      - run:
+          name: Linting
+          command: tslint -p test -t stylish
+#      - run:
+#          name: Testing
+#          command: npm test
   node-8:
     <<: *test
     docker:
@@ -45,7 +55,9 @@ workflows:
   version: 2
   "github-indexer":
     jobs:
+      - node-latest
       - node-10
+      - mpde-8
       - cache:
           filters:
             tags:
