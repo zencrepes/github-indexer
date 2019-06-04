@@ -1,5 +1,6 @@
 import Command, {flags} from '@oclif/command'
 import * as fs from 'fs'
+import * as fse from 'fs-extra'
 import * as jsYaml from 'js-yaml'
 import * as path from 'path'
 
@@ -32,6 +33,7 @@ export default abstract class extends Command {
 
   async init() {
     // If config file does not exists, initialize it:
+    fse.ensureDirSync(this.config.configDir)
     if (!fs.existsSync(path.join(this.config.configDir, 'config.yml'))) {
       const defaultConfig = {
         elasticsearch: {
