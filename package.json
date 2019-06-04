@@ -1,7 +1,7 @@
 {
   "name": "github-indexer",
   "description": "Grabs data from GitHub and pushes it to an Elasticsearch instance",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "author": "fgerthoffert @Fgerthoffert",
   "bin": {
     "github-indexer": "./bin/run"
@@ -75,7 +75,7 @@
   },
   "repository": "zencrepes/github-indexer",
   "scripts": {
-    "postpack": "rm -f oclif.manifest.json",
+    "postpack": "rm -f oclif.manifest.json && cp -R ./src/utils/github/graphql ./lib/utils/github/",
     "posttest": "tslint -p test -t stylish",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",

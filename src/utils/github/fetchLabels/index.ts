@@ -63,7 +63,7 @@ export default class FetchLabels {
     this.cli = cli
     this.fetchedLabels = []
     this.errorRetry = 0
-    this.getLabels = readFileSync('./src/utils/github/graphql/getLabels.graphql', 'utf8')
+    this.getLabels = readFileSync(__dirname + '/../graphql/getLabels.graphql', 'utf8')
 
     this.rateLimit = {
       limit: 5000,

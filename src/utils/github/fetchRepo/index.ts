@@ -44,7 +44,7 @@ export default class FetchRepo {
     this.cli = cli
     this.fetchedRepos = []
     this.errorRetry = 0
-    this.getSingleRepo = readFileSync('./src/utils/github/graphql/getSingleRepo.graphql', 'utf8')
+    this.getSingleRepo = readFileSync(__dirname + '/../graphql/getSingleRepo.graphql', 'utf8')
 
     this.rateLimit = {
       limit: 5000,

@@ -73,7 +73,7 @@ export default class FetchPullrequests {
     this.cli = cli
     this.fetchedPullrequests = []
     this.errorRetry = 0
-    this.getPullrequests = readFileSync('./src/utils/github/graphql/getPullrequests.graphql', 'utf8')
+    this.getPullrequests = readFileSync(__dirname + '/../graphql/getPullrequests.graphql', 'utf8')
 
     this.rateLimit = {
       limit: 5000,

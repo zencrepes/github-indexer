@@ -69,9 +69,9 @@ export default class FetchAffiliated {
     this.totalReposCount = 0
     this.orgReposCount = {}
     this.errorRetry = 0
-    this.getOrgs = readFileSync('./src/utils/github/graphql/getOrgs.graphql', 'utf8')
-    this.getRepos = readFileSync('./src/utils/github/graphql/getRepos.graphql', 'utf8')
-    this.getUserRepos = readFileSync('./src/utils/github/graphql/getUserRepos.graphql', 'utf8')
+    this.getOrgs = readFileSync(__dirname + '/../graphql/getOrgs.graphql', 'utf8')
+    this.getRepos = readFileSync(__dirname + '/../graphql/getRepos.graphql', 'utf8')
+    this.getUserRepos = readFileSync(__dirname + '/../graphql/getUserRepos.graphql', 'utf8')
 
     this.rateLimit = {
       limit: 5000,

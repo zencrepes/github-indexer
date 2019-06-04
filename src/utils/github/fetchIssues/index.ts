@@ -73,7 +73,7 @@ export default class FetchIssues {
     this.cli = cli
     this.fetchedIssues = []
     this.errorRetry = 0
-    this.getIssues = readFileSync('./src/utils/github/graphql/getIssues.graphql', 'utf8')
+    this.getIssues = readFileSync(__dirname + '/../graphql/getIssues.graphql', 'utf8')
 
     this.rateLimit = {
       limit: 5000,

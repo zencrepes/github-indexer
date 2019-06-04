@@ -53,9 +53,9 @@ export default class FetchOrg {
     this.fetchedRepos = []
     this.totalReposCount = 0
     this.errorRetry = 0
-    this.getReposExternal = readFileSync('./src/utils/github/graphql/getReposExternal.graphql', 'utf8')
-    this.getRepos = readFileSync('./src/utils/github/graphql/getRepos.graphql', 'utf8')
-    this.getUserRepos = readFileSync('./src/utils/github/graphql/getUserRepos.graphql', 'utf8')
+    this.getReposExternal = readFileSync(__dirname + '/../graphql/getReposExternal.graphql', 'utf8')
+    this.getRepos = readFileSync(__dirname + '/../graphql/getRepos.graphql', 'utf8')
+    this.getUserRepos = readFileSync(__dirname + '/../graphql/getUserRepos.graphql', 'utf8')
 
     this.rateLimit = {
       limit: 5000,

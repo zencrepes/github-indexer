@@ -77,8 +77,8 @@ export default class FetchProjects {
     this.fetchedProjects = []
     this.fetchedOrgProjects = []
     this.errorRetry = 0
-    this.getProjects = readFileSync('./src/utils/github/graphql/getProjects.graphql', 'utf8')
-    this.getOrgProjects = readFileSync('./src/utils/github/graphql/getOrgProjects.graphql', 'utf8')
+    this.getProjects = readFileSync(__dirname + '/../graphql/getProjects.graphql', 'utf8')
+    this.getOrgProjects = readFileSync(__dirname + '/../graphql/getOrgProjects.graphql', 'utf8')
     this.rateLimit = {
       limit: 5000,
       cost: 1,

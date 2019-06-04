@@ -73,7 +73,7 @@ export default class FetchMilestones {
     this.cli = cli
     this.fetchedMilestones = []
     this.errorRetry = 0
-    this.getMilestones = readFileSync('./src/utils/github/graphql/getMilestones.graphql', 'utf8')
+    this.getMilestones = readFileSync(__dirname + '/../graphql/getMilestones.graphql', 'utf8')
 
     this.rateLimit = {
       limit: 5000,
