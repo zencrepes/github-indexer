@@ -8,6 +8,8 @@ import * as _ from 'lodash'
 import * as path from 'path'
 
 import Command from '../base'
+import YmlRepos from '../schemas/repositories'
+import YmlSettings from '../schemas/settings'
 import FetchAffiliated from '../utils/github/fetchAffiliated/index'
 import FetchOrg from '../utils/github/fetchOrg/index'
 import FetchRepo from '../utils/github/fetchRepo/index'
@@ -111,8 +113,10 @@ export default class GhRepos extends Command {
     const testIndex = await client.indices.exists({index: reposIndexName})
     if (testIndex.body === false) {
       cli.action.start('Elasticsearch Index gh_repos does not exist, creating')
-      const mappings = await loadYamlFile('./src/schemas/repositories.yml')
-      const settings = await loadYamlFile('./src/schemas/settings.yml')
+      const mappings = await jsYaml.safeLoad(YmlRepos)
+      const settings = await jsYaml.safeLoad(YmlSettings)
+      //const mappings = await loadYamlFile(__dirname + '../schemas/repositories.yml')
+      //const settings = await loadYamlFile(__dirname + '../schemas/settings.yml')
       await client.indices.create({index: reposIndexName, body: {settings, mappings}})
     }
     cli.action.stop(' done')

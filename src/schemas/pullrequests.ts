@@ -1,3 +1,4 @@
+const yaml = `
 #https://www.elastic.co/guide/en/elasticsearch/plugins/current/mapper-size-usage.html
 _source:
   enabled: true
@@ -159,25 +160,6 @@ properties:
                     type: keyword
                   url:
                     type: keyword
-  pullRequests:
-    properties:
-      totalCount:
-        type: integer
-      edges:
-        type: nested
-        properties:
-          node:
-            properties:
-              id:
-                type: keyword
-              number:
-                type: integer
-              state:
-                type: keyword
-              title:
-                type: text
-              url:
-                type: keyword
   timelineItems:
     properties:
       totalCount:
@@ -238,10 +220,13 @@ properties:
     properties:
       totalCount:
         type: integer
-
-
-
-
-
-
-
+  reviewRequests:
+    properties:
+      totalCount:
+        type: integer
+  reviews:
+    properties:
+      totalCount:
+        type: integer
+`
+export default yaml

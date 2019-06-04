@@ -163,7 +163,7 @@ export default class FetchLabels {
 
     if (data.data.repository.labels.edges.length > 0) {
       const apiPerf = Math.round(data.data.repository.labels.edges.length / (callDuration / 1000))
-      this.log('Latest call contained ' + data.data.repository.labels.edges.length + ' issues, oldest: ' + format(parseISO(data.data.repository.labels.edges[0].node.updatedAt), 'LLL do yyyy') + ' download rate: ' + apiPerf + ' issues/s')
+      this.log('Latest call contained ' + data.data.repository.labels.edges.length + ' issues, oldest: ' + format(parseISO(data.data.repository.labels.edges[0].node.updatedAt), 'LLL do yyyy') + ' download rate: ' + apiPerf + ' labels/s')
     }
     for (let currentLabel of data.data.repository.labels.edges) {
       let labelObj = JSON.parse(JSON.stringify(currentLabel.node)) //TODO - Replace this with something better to copy object ?

@@ -1,10 +1,13 @@
 import {ApiResponse, Client} from '@elastic/elasticsearch'
 import {flags} from '@oclif/command'
 import cli from 'cli-ux'
+import * as jsYaml from 'js-yaml'
 import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
 import Command from '../base'
+import YmlMilestones from '../schemas/milestones'
+import YmlSettings from '../schemas/settings'
 import FetchMilestones from '../utils/github/fetchMilestones/index'
 import chunkArray from '../utils/misc/chunkArray'
 
@@ -125,8 +128,8 @@ export default class GhMilestones extends Command {
       const testIndex = await client.indices.exists({index: milestonesIndex})
       if (testIndex.body === false) {
         cli.action.start('Elasticsearch Index ' + milestonesIndex + ' does not exist, creating')
-        const mappings = await loadYamlFile('./src/schemas/issues.yml')
-        const settings = await loadYamlFile('./src/schemas/settings.yml')
+        const mappings = await jsYaml.safeLoad(YmlMilestones)
+        const settings = await jsYaml.safeLoad(YmlSettings)
         await client.indices.create({index: milestonesIndex, body: {settings, mappings}})
         cli.action.stop(' created')
       }

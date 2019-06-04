@@ -1,10 +1,13 @@
 import {ApiResponse, Client} from '@elastic/elasticsearch'
 import {flags} from '@oclif/command'
 import cli from 'cli-ux'
+import * as jsYaml from 'js-yaml'
 import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
 import Command from '../base'
+import YmlProjects from '../schemas/projects'
+import YmlSettings from '../schemas/settings'
 import FetchProjects from '../utils/github/fetchProjects/index'
 import chunkArray from '../utils/misc/chunkArray'
 
@@ -121,8 +124,8 @@ export default class GhProjects extends Command {
         const testOrgProjectIndex = await client.indices.exists({index: orgProjectsIndex})
         if (testOrgProjectIndex.body === false) {
           cli.action.start('Elasticsearch Index ' + orgProjectsIndex + ' does not exist, creating')
-          const mappings = await loadYamlFile('./src/schemas/projects.yml')
-          const settings = await loadYamlFile('./src/schemas/settings.yml')
+          const mappings = await jsYaml.safeLoad(YmlProjects)
+          const settings = await jsYaml.safeLoad(YmlSettings)
           await client.indices.create({index: orgProjectsIndex, body: {settings, mappings}})
           cli.action.stop(' created')
         }
@@ -180,8 +183,8 @@ export default class GhProjects extends Command {
       const testIndex = await client.indices.exists({index: projectsIndex})
       if (testIndex.body === false) {
         cli.action.start('Elasticsearch Index ' + projectsIndex + ' does not exist, creating')
-        const mappings = await loadYamlFile('./src/schemas/projects.yml')
-        const settings = await loadYamlFile('./src/schemas/settings.yml')
+        const mappings = await jsYaml.safeLoad(YmlProjects)
+        const settings = await jsYaml.safeLoad(YmlSettings)
         await client.indices.create({index: projectsIndex, body: {settings, mappings}})
         cli.action.stop(' created')
       }

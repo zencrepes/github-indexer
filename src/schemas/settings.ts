@@ -1,3 +1,4 @@
+const yaml = `
 analysis:
   analyzer:
     autocomplete_analyzed:
@@ -21,3 +22,6 @@ analysis:
       side: front
       type: edge_ngram
 index.mapping.nested_fields.limit: 100
+
+`
+export default yaml

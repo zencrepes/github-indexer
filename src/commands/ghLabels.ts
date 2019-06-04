@@ -1,10 +1,13 @@
 import {ApiResponse, Client} from '@elastic/elasticsearch'
 import {flags} from '@oclif/command'
 import cli from 'cli-ux'
+import * as jsYaml from 'js-yaml'
 import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
 import Command from '../base'
+import YmlLabels from '../schemas/labels'
+import YmlSettings from '../schemas/settings'
 import FetchLabels from '../utils/github/fetchLabels/index'
 import chunkArray from '../utils/misc/chunkArray'
 
@@ -117,8 +120,8 @@ export default class GhLabels extends Command {
       const testIndex = await client.indices.exists({index: labelsIndex})
       if (testIndex.body === false) {
         cli.action.start('Elasticsearch Index ' + labelsIndex + ' does not exist, creating')
-        const mappings = await loadYamlFile('./src/schemas/labels.yml')
-        const settings = await loadYamlFile('./src/schemas/settings.yml')
+        const mappings = await jsYaml.safeLoad(YmlLabels)
+        const settings = await jsYaml.safeLoad(YmlSettings)
         await client.indices.create({index: labelsIndex, body: {settings, mappings}})
         cli.action.stop(' created')
       } else {
