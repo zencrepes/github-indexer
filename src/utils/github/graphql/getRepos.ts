@@ -1,0 +1,57 @@
+const query = `
+  query ($repo_cursor: String, $increment: Int, $org_name: String!){
+    rateLimit {
+      limit
+      cost
+      remaining
+      resetAt
+    }
+    viewer {
+      organization(login: $org_name) {
+        id
+        login
+        repositories(first: $increment, after: $repo_cursor) {
+          totalCount
+          edges {
+            cursor
+            node {
+              name
+              url
+              id
+              databaseId
+              diskUsage
+              forkCount
+              isPrivate
+              isArchived
+              issues(first: 1, orderBy: {field: UPDATED_AT, direction: DESC}) {
+                totalCount
+                edges {
+                  node {
+                    id
+                    updatedAt
+                  }
+                }
+              }
+              labels(first: 1) {
+                totalCount
+              }
+              milestones(first: 1) {
+                totalCount
+              }
+              pullRequests(first: 1) {
+                totalCount
+              }
+              releases(first: 1) {
+                totalCount
+              }
+              projects(first: 1) {
+                totalCount
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
+export default query

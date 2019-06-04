@@ -3,9 +3,12 @@ import ApolloClient from 'apollo-client'
 import {ApolloLink, concat} from 'apollo-link'
 import {HttpLink} from 'apollo-link-http'
 import cli from 'cli-ux'
-import {readFileSync} from 'fs'
+//import {readFileSync} from 'fs'
 import fetch from 'node-fetch'
 
+import getRepos from '../graphql/getRepos'
+import getReposExternal from '../graphql/getReposExternal'
+import getUserRepos from '../graphql/getUserRepos'
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
 
@@ -53,9 +56,12 @@ export default class FetchOrg {
     this.fetchedRepos = []
     this.totalReposCount = 0
     this.errorRetry = 0
-    this.getReposExternal = readFileSync(__dirname + '/../graphql/getReposExternal.graphql', 'utf8')
-    this.getRepos = readFileSync(__dirname + '/../graphql/getRepos.graphql', 'utf8')
-    this.getUserRepos = readFileSync(__dirname + '/../graphql/getUserRepos.graphql', 'utf8')
+    //this.getReposExternal = readFileSync(__dirname + '/../graphql/getReposExternal.graphql', 'utf8')
+    //this.getRepos = readFileSync(__dirname + '/../graphql/getRepos.graphql', 'utf8')
+    //this.getUserRepos = readFileSync(__dirname + '/../graphql/getUserRepos.graphql', 'utf8')
+    this.getReposExternal = getReposExternal
+    this.getUserRepos = getUserRepos
+    this.getRepos = getRepos
 
     this.rateLimit = {
       limit: 5000,

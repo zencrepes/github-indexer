@@ -3,12 +3,13 @@ import ApolloClient from 'apollo-client'
 import {ApolloLink, concat} from 'apollo-link'
 import {HttpLink} from 'apollo-link-http'
 import {format, parseISO} from 'date-fns'
-import {createWriteStream, readFileSync} from 'fs'
+import {createWriteStream} from 'fs'
 //import { fetch } from 'apollo-env'
 import fetch from 'node-fetch'
 import * as path from 'path'
 import {performance} from 'perf_hooks'
 
+import getPullrequests from '../graphql/getPullrequests'
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
 
@@ -73,7 +74,8 @@ export default class FetchPullrequests {
     this.cli = cli
     this.fetchedPullrequests = []
     this.errorRetry = 0
-    this.getPullrequests = readFileSync(__dirname + '/../graphql/getPullrequests.graphql', 'utf8')
+    //this.getPullrequests = readFileSync(__dirname + '/../graphql/getPullrequests.graphql', 'utf8')
+    this.getPullrequests = getPullrequests
 
     this.rateLimit = {
       limit: 5000,

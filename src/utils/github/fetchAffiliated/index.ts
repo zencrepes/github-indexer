@@ -3,10 +3,13 @@ import ApolloClient from 'apollo-client'
 import {ApolloLink, concat} from 'apollo-link'
 import {HttpLink} from 'apollo-link-http'
 import cli from 'cli-ux'
-import {readFileSync} from 'fs'
+//import {readFileSync} from 'fs'
 import * as _ from 'lodash'
 import fetch from 'node-fetch'
 
+import getOrgs from '../graphql/getOrgs'
+import getRepos from '../graphql/getRepos'
+import getUserRepos from '../graphql/getUserRepos'
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
 
@@ -69,9 +72,12 @@ export default class FetchAffiliated {
     this.totalReposCount = 0
     this.orgReposCount = {}
     this.errorRetry = 0
-    this.getOrgs = readFileSync(__dirname + '/../graphql/getOrgs.graphql', 'utf8')
-    this.getRepos = readFileSync(__dirname + '/../graphql/getRepos.graphql', 'utf8')
-    this.getUserRepos = readFileSync(__dirname + '/../graphql/getUserRepos.graphql', 'utf8')
+    //this.getOrgs = readFileSync(__dirname + '/../graphql/getOrgs.graphql', 'utf8')
+    //this.getRepos = readFileSync(__dirname + '/../graphql/getRepos.graphql', 'utf8')
+    //this.getUserRepos = readFileSync(__dirname + '/../graphql/getUserRepos.graphql', 'utf8')
+    this.getOrgs = getOrgs
+    this.getRepos = getRepos
+    this.getUserRepos = getUserRepos
 
     this.rateLimit = {
       limit: 5000,

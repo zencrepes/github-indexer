@@ -3,12 +3,13 @@ import ApolloClient from 'apollo-client'
 import {ApolloLink, concat} from 'apollo-link'
 import {HttpLink} from 'apollo-link-http'
 import {format, parseISO} from 'date-fns'
-import {createWriteStream, readFileSync} from 'fs'
+import {createWriteStream} from 'fs'
 //import { fetch } from 'apollo-env'
 import fetch from 'node-fetch'
 import * as path from 'path'
 import {performance} from 'perf_hooks'
 
+import getMilestones from '../graphql/getMilestones'
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
 
@@ -73,7 +74,8 @@ export default class FetchMilestones {
     this.cli = cli
     this.fetchedMilestones = []
     this.errorRetry = 0
-    this.getMilestones = readFileSync(__dirname + '/../graphql/getMilestones.graphql', 'utf8')
+    //this.getMilestones = readFileSync(__dirname + '/../graphql/getMilestones.graphql', 'utf8')
+    this.getMilestones = getMilestones
 
     this.rateLimit = {
       limit: 5000,

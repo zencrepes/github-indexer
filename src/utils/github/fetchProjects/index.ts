@@ -3,12 +3,14 @@ import ApolloClient from 'apollo-client'
 import {ApolloLink, concat} from 'apollo-link'
 import {HttpLink} from 'apollo-link-http'
 import {format, parseISO} from 'date-fns'
-import {createWriteStream, readFileSync} from 'fs'
+import {createWriteStream} from 'fs'
 //import { fetch } from 'apollo-env'
 import fetch from 'node-fetch'
 import * as path from 'path'
 import {performance} from 'perf_hooks'
 
+import getOrgProjects from '../graphql/getOrgProjects'
+import getProjects from '../graphql/getProjects'
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
 
@@ -77,8 +79,10 @@ export default class FetchProjects {
     this.fetchedProjects = []
     this.fetchedOrgProjects = []
     this.errorRetry = 0
-    this.getProjects = readFileSync(__dirname + '/../graphql/getProjects.graphql', 'utf8')
-    this.getOrgProjects = readFileSync(__dirname + '/../graphql/getOrgProjects.graphql', 'utf8')
+    //this.getProjects = readFileSync(__dirname + '/../graphql/getProjects.graphql', 'utf8')
+    //this.getOrgProjects = readFileSync(__dirname + '/../graphql/getOrgProjects.graphql', 'utf8')
+    this.getProjects = getProjects
+    this.getOrgProjects = getOrgProjects
     this.rateLimit = {
       limit: 5000,
       cost: 1,
