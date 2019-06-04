@@ -5,7 +5,7 @@ import * as loadYamlFile from 'load-yaml-file'
 import * as path from 'path'
 
 import Command from '../base'
-import FetchPullrequests from '../utils/github/FetchPullrequests/index'
+import FetchPullrequests from '../utils/github/fetchPullrequests/index'
 import chunkArray from '../utils/misc/chunkArray'
 
 interface SearchResponse<T> {
