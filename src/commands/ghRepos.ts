@@ -80,24 +80,27 @@ export default class GhRepos extends Command {
   async run() {
     const {flags} = this.parse(GhRepos)
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
-    const {grab, org, repo, force, esport, eshost, esrepo} = flags
+    const {grab, org, repo, force, esport, eshost, esrepo, glogin, gtoken, gincrement} = flags
     const es_port = (esport !== undefined ? esport : userConfig.elasticsearch.port)
     const es_host = (eshost !== undefined ? eshost : userConfig.elasticsearch.host)
     const reposIndexName = (esrepo !== undefined ? esrepo : userConfig.elasticsearch.indices.repos)
+    const gh_login = (glogin !== undefined ? glogin : userConfig.github.login)
+    const gh_token = (gtoken !== undefined ? gtoken : userConfig.github.token)
+    const gh_increment = parseInt((gincrement !== undefined ? gincrement : userConfig.fetch.max_nodes), 10)
 
     //1- Grab the repositories from GitHub
     let fetchedRepos: Array<any> = []
     if (grab === 'affiliated') {
       this.log('Starting to fetch data from affiliated organizations')
-      const fetchData = new FetchAffiliated(this.log, this.error, userConfig, cli)
+      const fetchData = new FetchAffiliated(this.log, this.error, gh_login, gh_token, gh_increment, cli)
       fetchedRepos = await fetchData.load()
     } else if (grab === 'org' && org !== undefined) {
       this.log('Starting to fetch data from org: ' + org)
-      const fetchData = new FetchOrg(this.log, userConfig, cli)
+      const fetchData = new FetchOrg(this.log, gh_token, gh_increment, cli)
       fetchedRepos = await fetchData.load(org)
     } else if (grab === 'repo' && org !== undefined && repo !== undefined) {
       this.log('Starting to fetch data from repo: ' + org + '/' + repo)
-      const fetchData = new FetchRepo(this.log, userConfig, cli)
+      const fetchData = new FetchRepo(this.log, gh_token, gh_increment, cli)
       fetchedRepos = await fetchData.load(org, repo)
     }
 

@@ -109,11 +109,13 @@ export default class GhIssues extends Command {
   async run() {
     const {flags} = this.parse(GhIssues)
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
-    const {esport, eshost, esrepo} = flags
+    const {esport, eshost, esrepo, gtoken, gincrement} = flags
     const es_port = (esport !== undefined ? esport : userConfig.elasticsearch.port)
     const es_host = (eshost !== undefined ? eshost : userConfig.elasticsearch.host)
     const reposIndexName = (esrepo !== undefined ? esrepo : userConfig.elasticsearch.indices.repos)
     const indexIssuePrefix = userConfig.elasticsearch.indices.issues
+    const gh_token = (gtoken !== undefined ? gtoken : userConfig.github.token)
+    const gh_increment = parseInt((gincrement !== undefined ? gincrement : userConfig.fetch.max_nodes), 10)
 
     //1- Test if an index exists, if it does not, create it.
     cli.action.start('Checking if index: ' + reposIndexName + ' exists')
@@ -153,7 +155,7 @@ export default class GhIssues extends Command {
     if (activeRepos.length === 0) {
       this.error('The script could not find any active repositories. Please use ghRepos and cfRepos first.', {exit: 1})
     }
-    const fetchData = new FetchIssues(this.log, userConfig, this.config.configDir, cli)
+    const fetchData = new FetchIssues(this.log, gh_token, gh_increment, this.config.configDir, cli)
 
     this.log('Starting to grab issues')
     for (let repo of activeRepos) {

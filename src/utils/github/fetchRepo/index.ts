@@ -3,24 +3,14 @@ import ApolloClient from 'apollo-client'
 import {ApolloLink, concat} from 'apollo-link'
 import {HttpLink} from 'apollo-link-http'
 import cli from 'cli-ux'
-import {readFileSync} from 'fs'
+//import {readFileSync} from 'fs'
 import fetch from 'node-fetch'
 
+import getSingleRepo from '../graphql/getSingleRepo'
 import graphqlQuery from '../utils/graphqlQuery'
-
-interface UserConfig {
-  fetch: {
-    max_nodes: string,
-  },
-  github: {
-    token: string,
-    login: string
-  }
-}
 
 export default class FetchRepo {
   githubToken: string
-  githubLogin: string
   maxQueryIncrement: number
   log: any
   cli: object
@@ -35,16 +25,16 @@ export default class FetchRepo {
   }
   client: object
 
-  constructor(log: object, userConfig: UserConfig, cli: object) {
-    this.githubToken = userConfig.github.token
-    this.githubLogin = userConfig.github.login
-    this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
+  constructor(log: object, gh_token: string, gh_increment: number, cli: object) {
+    this.githubToken = gh_token
+    this.maxQueryIncrement = gh_increment
 
     this.log = log
     this.cli = cli
     this.fetchedRepos = []
     this.errorRetry = 0
-    this.getSingleRepo = readFileSync(__dirname + '/../graphql/getSingleRepo.graphql', 'utf8')
+    //this.getSingleRepo = readFileSync(__dirname + '/../graphql/getSingleRepo.graphql', 'utf8')
+    this.getSingleRepo = getSingleRepo
 
     this.rateLimit = {
       limit: 5000,

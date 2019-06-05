@@ -12,16 +12,6 @@ import getUserRepos from '../graphql/getUserRepos'
 import calculateQueryIncrement from '../utils/calculateQueryIncrement'
 import graphqlQuery from '../utils/graphqlQuery'
 
-interface UserConfig {
-  fetch: {
-    max_nodes: string,
-  },
-  github: {
-    token: string,
-    login: string
-  }
-}
-
 interface Organization {
   login: string,
   id: string,
@@ -29,7 +19,6 @@ interface Organization {
 
 export default class FetchOrg {
   githubToken: string
-  githubLogin: string
   maxQueryIncrement: number
   log: any
   cli: object
@@ -46,10 +35,9 @@ export default class FetchOrg {
     resetAt: string | null
   }
   client: object
-  constructor(log: object, userConfig: UserConfig, cli: object) {
-    this.githubToken = userConfig.github.token
-    this.githubLogin = userConfig.github.login
-    this.maxQueryIncrement = parseInt(userConfig.fetch.max_nodes, 10)
+  constructor(log: object, gh_token: string, gh_increment: number, cli: object) {
+    this.githubToken = gh_token
+    this.maxQueryIncrement = gh_increment
 
     this.log = log
     this.cli = cli

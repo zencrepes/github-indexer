@@ -12,6 +12,8 @@ Grabs data from GitHub and pushes it to an Elasticsearch instance
 <!-- toc -->
 * [Introduction](#introduction)
 * [Installation](#installation)
+* [Develop](#develop)
+* [Quick start with Docker](#quick-start-with-docker)
 * [Configuration](#configuration)
 * [Usage](#usage)
 * [Commands](#commands)
@@ -24,8 +26,8 @@ This script has been created to easily export Data from GitHub and import it int
 Whenever possible (i.e. issues, milestones, projects), it loads data sorted by the updated date in descending order (most recent first) and will stop as soon as it find the same node already in Elasticsearch. This way, first load takes some time, then you can just cron it to keep your Elasticsearch instance up to date. 
 
 The overall logic is articulated around 3 stages:
- - Identify repositories to load data from (this is done through the ghRepos command => `github-indexer help ghRepos`) 
- - Select which repository to load data from by editing `~/.config/github-indexer/repositories.yml` and applying the changes by running `github-indexer cfRepos`
+ - Identify repositories to load data from
+ - [OPTIONAL] Select which repository to load data from by editing `~/.config/github-indexer/repositories.yml` and applying the changes by running `github-indexer cfRepos`
     - _or force repos to be active during initial fetch by running ghRepos with the -f flag:_ `github-indexer ghRepos YOUR_OPTIONS -f`
  - Load data from the selected repositories (for example `github-indexer ghIssues` to load issues)
 
@@ -38,10 +40,27 @@ Note: GitHub doesn't provide a mechanism to fetch new or updated labels so the s
 # Installation
 <!-- installation -->
 ```sh-session
-git clone https://github.com/zencrepes/github-indexer.git
 npm install -g github-indexer
 ```
 <!-- installationstop -->
+
+# Develop
+```sh-session
+git clone https://github.com/zencrepes/github-indexer.git
+npm install 
+```
+
+# Quick start with Docker
+You can use github-indexer docker image to get started quickly.
+
+For example, to pull all repositories from an org:
+```sh-session
+docker run -it --rm -e ES_HOST='http://host.docker.internal' \
+-e ES_PORT='9200' \
+-e ES_REPO='gh_repos' \
+-e GITHUB_TOKEN='YOUR TOKEN HERE' \
+gh-indexer-8 github-indexer ghRepos -g org -o YOUR_ORG
+```
 
 # Configuration
 <!-- configuration -->
@@ -52,6 +71,8 @@ Environment variable are also available for some of the configuration settings:
  - ES_PORT: Elasticsearch port
  - ES_REPO: Elasticsearch index containing the repository configuration
  - GITHUB_TOKEN: GitHub token for fetching data.
+ - GITHUB_LOGIN: GitHub user login to fatch data from (for affiliated mode)
+ - GITHUB_INCREMENT: Number of nodes to fetch at a time (max 100)
 
 Environment variable will take precedence over the corresponding settings in the configuration file.
 
@@ -71,6 +92,7 @@ fetch:
   max_nodes: 30                     # Number of nodes to request from GitHub Graphql API (max: 100), avoid using too high of a number of large repositories
 github:
   token: 'TOKEN_HERE'               # GitHub authorization token
+  login: 'YOUR_USERNAME'               # GitHub authorization token
 ```
 
 All of the configuration settings should be self-explanatory with the exception of `max_nodes`, which is used to indicate how many root nodes should be fetched from GitHub graphql's API. The maximum number supported by GitHub is 100, but please note that GitHub's GraphQL API can be unstable with large repositories, it is recommended to keep that number around 30 -> 50. A smaller number triggers more smaller call, a larger number triggers less larger calls.
@@ -92,7 +114,7 @@ $ npm install -g github-indexer
 $ github-indexer COMMAND
 running command...
 $ github-indexer (-v|--version|version)
-github-indexer/0.0.20 darwin-x64 node-v10.16.0
+github-indexer/0.1.0 darwin-x64 node-v10.16.0
 $ github-indexer --help [COMMAND]
 USAGE
   $ github-indexer COMMAND
@@ -120,17 +142,19 @@ USAGE
   $ github-indexer cfRepos
 
 OPTIONS
-  -h, --help       show CLI help
-  --eshost=eshost  Elastic search host
-  --esport=esport  Elastic search port
-  --esrepo=esrepo  Elastic index containing the GitHub repository
-  --gtoken=gtoken  GitHub user Token
+  -h, --help               show CLI help
+  --eshost=eshost          Elastic search host
+  --esport=esport          Elastic search port
+  --esrepo=esrepo          Elastic index containing the GitHub repository
+  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin          GitHub user Login (for fetching user repos)
+  --gtoken=gtoken          GitHub user Token
 
 EXAMPLE
   $ github-indexer cfRepo
 ```
 
-_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.20/src/commands/cfRepos.ts)_
+_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/cfRepos.ts)_
 
 ## `github-indexer ghIssues`
 
@@ -141,17 +165,19 @@ USAGE
   $ github-indexer ghIssues
 
 OPTIONS
-  -h, --help       show CLI help
-  --eshost=eshost  Elastic search host
-  --esport=esport  Elastic search port
-  --esrepo=esrepo  Elastic index containing the GitHub repository
-  --gtoken=gtoken  GitHub user Token
+  -h, --help               show CLI help
+  --eshost=eshost          Elastic search host
+  --esport=esport          Elastic search port
+  --esrepo=esrepo          Elastic index containing the GitHub repository
+  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin          GitHub user Login (for fetching user repos)
+  --gtoken=gtoken          GitHub user Token
 
 EXAMPLE
   $ github-indexer ghIssues
 ```
 
-_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.20/src/commands/ghIssues.ts)_
+_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghIssues.ts)_
 
 ## `github-indexer ghLabels`
 
@@ -162,17 +188,19 @@ USAGE
   $ github-indexer ghLabels
 
 OPTIONS
-  -h, --help       show CLI help
-  --eshost=eshost  Elastic search host
-  --esport=esport  Elastic search port
-  --esrepo=esrepo  Elastic index containing the GitHub repository
-  --gtoken=gtoken  GitHub user Token
+  -h, --help               show CLI help
+  --eshost=eshost          Elastic search host
+  --esport=esport          Elastic search port
+  --esrepo=esrepo          Elastic index containing the GitHub repository
+  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin          GitHub user Login (for fetching user repos)
+  --gtoken=gtoken          GitHub user Token
 
 EXAMPLE
   $ github-indexer ghLabels
 ```
 
-_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.20/src/commands/ghLabels.ts)_
+_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghLabels.ts)_
 
 ## `github-indexer ghMilestones`
 
@@ -183,17 +211,19 @@ USAGE
   $ github-indexer ghMilestones
 
 OPTIONS
-  -h, --help       show CLI help
-  --eshost=eshost  Elastic search host
-  --esport=esport  Elastic search port
-  --esrepo=esrepo  Elastic index containing the GitHub repository
-  --gtoken=gtoken  GitHub user Token
+  -h, --help               show CLI help
+  --eshost=eshost          Elastic search host
+  --esport=esport          Elastic search port
+  --esrepo=esrepo          Elastic index containing the GitHub repository
+  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin          GitHub user Login (for fetching user repos)
+  --gtoken=gtoken          GitHub user Token
 
 EXAMPLE
   $ github-indexer ghMilestones
 ```
 
-_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.20/src/commands/ghMilestones.ts)_
+_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghMilestones.ts)_
 
 ## `github-indexer ghProjects`
 
@@ -204,17 +234,19 @@ USAGE
   $ github-indexer ghProjects
 
 OPTIONS
-  -h, --help       show CLI help
-  --eshost=eshost  Elastic search host
-  --esport=esport  Elastic search port
-  --esrepo=esrepo  Elastic index containing the GitHub repository
-  --gtoken=gtoken  GitHub user Token
+  -h, --help               show CLI help
+  --eshost=eshost          Elastic search host
+  --esport=esport          Elastic search port
+  --esrepo=esrepo          Elastic index containing the GitHub repository
+  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin          GitHub user Login (for fetching user repos)
+  --gtoken=gtoken          GitHub user Token
 
 EXAMPLE
   $ github-indexer ghIssues
 ```
 
-_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.20/src/commands/ghProjects.ts)_
+_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghProjects.ts)_
 
 ## `github-indexer ghPullrequests`
 
@@ -225,17 +257,19 @@ USAGE
   $ github-indexer ghPullrequests
 
 OPTIONS
-  -h, --help       show CLI help
-  --eshost=eshost  Elastic search host
-  --esport=esport  Elastic search port
-  --esrepo=esrepo  Elastic index containing the GitHub repository
-  --gtoken=gtoken  GitHub user Token
+  -h, --help               show CLI help
+  --eshost=eshost          Elastic search host
+  --esport=esport          Elastic search port
+  --esrepo=esrepo          Elastic index containing the GitHub repository
+  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin          GitHub user Login (for fetching user repos)
+  --gtoken=gtoken          GitHub user Token
 
 EXAMPLE
   $ github-indexer ghPullrequests
 ```
 
-_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.20/src/commands/ghPullrequests.ts)_
+_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghPullrequests.ts)_
 
 ## `github-indexer ghRepos`
 
@@ -254,6 +288,8 @@ OPTIONS
   --eshost=eshost                 Elastic search host
   --esport=esport                 Elastic search port
   --esrepo=esrepo                 Elastic index containing the GitHub repository
+  --gincrement=gincrement         GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                 GitHub user Login (for fetching user repos)
   --gtoken=gtoken                 GitHub user Token
 
 EXAMPLES
@@ -262,7 +298,7 @@ EXAMPLES
   $ github-indexer ghRepo -g repo -o microsoft -r vscode
 ```
 
-_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.20/src/commands/ghRepos.ts)_
+_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghRepos.ts)_
 
 ## `github-indexer help [COMMAND]`
 
@@ -290,14 +326,16 @@ USAGE
   $ github-indexer init
 
 OPTIONS
-  --eshost=eshost  Elastic search host
-  --esport=esport  Elastic search port
-  --esrepo=esrepo  Elastic index containing the GitHub repository
-  --gtoken=gtoken  GitHub user Token
+  --eshost=eshost          Elastic search host
+  --esport=esport          Elastic search port
+  --esrepo=esrepo          Elastic index containing the GitHub repository
+  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin          GitHub user Login (for fetching user repos)
+  --gtoken=gtoken          GitHub user Token
 
 EXAMPLE
   $ github-indexer init
 ```
 
-_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v0.0.20/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/init.ts)_
 <!-- commandsstop -->

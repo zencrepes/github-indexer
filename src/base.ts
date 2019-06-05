@@ -14,20 +14,28 @@ export default abstract class extends Command {
     eshost: flags.string({
       required: false,
       env: 'ES_HOST',
-      // tslint:disable-next-line:no-http-string
       description: 'Elastic search host'
     }),
     esrepo: flags.string({
       required: false,
       env: 'ES_REPO',
-      // tslint:disable-next-line:no-http-string
       description: 'Elastic index containing the GitHub repository'
+    }),
+    glogin: flags.string({
+      required: false,
+      env: 'GITHUB_LOGIN',
+      description: 'GitHub user Login (for fetching user repos)'
     }),
     gtoken: flags.string({
       required: false,
       env: 'GITHUB_TOKEN',
-      // tslint:disable-next-line:no-http-string
       description: 'GitHub user Token'
+    }),
+    gincrement: flags.string({
+      required: false,
+      env: 'GITHUB_INCREMENT',
+      // tslint:disable-next-line:no-http-string
+      description: 'GitHub API query increment (max nodes to fetch at a time)'
     }),
   }
 
@@ -53,7 +61,8 @@ export default abstract class extends Command {
           max_nodes: 30
         },
         github: {
-          token: 'TOKEN_HERE'
+          token: 'TOKEN_HERE',
+          login: 'YOUR_USERNAME'
         }
       }
       fs.writeFileSync(path.join(this.config.configDir, 'config.yml'), jsYaml.safeDump(defaultConfig))
