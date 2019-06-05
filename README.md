@@ -137,7 +137,7 @@ $ npm install -g github-indexer
 $ github-indexer COMMAND
 running command...
 $ github-indexer (-v|--version|version)
-github-indexer/0.1.5 darwin-x64 node-v10.16.0
+github-indexer/1.0.0 darwin-x64 node-v10.16.0
 $ github-indexer --help [COMMAND]
 USAGE
   $ github-indexer COMMAND
@@ -180,7 +180,7 @@ EXAMPLE
   $ github-indexer cfRepo
 ```
 
-_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/cfRepos.ts)_
+_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v1.0.0/src/commands/cfRepos.ts)_
 
 ## `github-indexer ghIssues`
 
@@ -206,7 +206,7 @@ EXAMPLE
   $ github-indexer ghIssues
 ```
 
-_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghIssues.ts)_
+_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v1.0.0/src/commands/ghIssues.ts)_
 
 ## `github-indexer ghLabels`
 
@@ -232,7 +232,7 @@ EXAMPLE
   $ github-indexer ghLabels
 ```
 
-_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghLabels.ts)_
+_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v1.0.0/src/commands/ghLabels.ts)_
 
 ## `github-indexer ghMilestones`
 
@@ -258,7 +258,7 @@ EXAMPLE
   $ github-indexer ghMilestones
 ```
 
-_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghMilestones.ts)_
+_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v1.0.0/src/commands/ghMilestones.ts)_
 
 ## `github-indexer ghProjects`
 
@@ -284,7 +284,7 @@ EXAMPLE
   $ github-indexer ghIssues
 ```
 
-_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghProjects.ts)_
+_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v1.0.0/src/commands/ghProjects.ts)_
 
 ## `github-indexer ghPullrequests`
 
@@ -310,7 +310,7 @@ EXAMPLE
   $ github-indexer ghPullrequests
 ```
 
-_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghPullrequests.ts)_
+_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v1.0.0/src/commands/ghPullrequests.ts)_
 
 ## `github-indexer ghRepos`
 
@@ -342,7 +342,7 @@ EXAMPLES
   $ github-indexer ghRepo -g repo -o microsoft -r vscode
 ```
 
-_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghRepos.ts)_
+_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v1.0.0/src/commands/ghRepos.ts)_
 
 ## `github-indexer help [COMMAND]`
 
@@ -384,7 +384,7 @@ EXAMPLE
   $ github-indexer init
 ```
 
-_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v1.0.0/src/commands/init.ts)_
 <!-- commandsstop -->
 
 # Develop
