@@ -15,12 +15,6 @@ jobs:
           name: Install dependencies
           command: yarn
       - run:
-          name: Install tslint
-          command: yarn global add ts-lint
-      - run:
-          name: Install tslint
-          command: yarn global add typescript
-      - run:
           name: Display version
           command: ./bin/run --version
       - run:
