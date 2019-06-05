@@ -4,10 +4,10 @@ import * as fs from 'fs'
 
 interface Configuration {
   es_node: string | undefined,
-  es_ssl_ca: string | undefined,
-  es_cloud_id: string | undefined,
-  es_cloud_username: string | undefined,
-  es_cloud_password: string | undefined,
+  es_ssl_ca: string | undefined | null,
+  es_cloud_id: string | undefined | null,
+  es_cloud_username: string | undefined | null,
+  es_cloud_password: string | undefined | null,
 }
 
 function esClient(p: Configuration) {

@@ -54,6 +54,13 @@ npm install
 You can use github-indexer docker image to get started quickly.
 
 For example, to pull all repositories from an org:
+
+Install 
+```sh-session
+docker pull zencrepes/github-indexer
+```
+
+Run
 ```sh-session
 docker run -it --rm \
 -e ES_NODE='https://username:password@host.docker.internal:9200' \
