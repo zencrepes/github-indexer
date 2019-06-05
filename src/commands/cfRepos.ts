@@ -1,4 +1,4 @@
-import {ApiResponse, Client} from '@elastic/elasticsearch'
+import {ApiResponse} from '@elastic/elasticsearch'
 import {flags} from '@oclif/command'
 import cli from 'cli-ux'
 import * as fs from 'fs'
@@ -7,6 +7,7 @@ import * as _ from 'lodash'
 import * as path from 'path'
 
 import Command from '../base'
+import esClient from '../utils/es/esClient'
 import chunkArray from '../utils/misc/chunkArray'
 
 interface SearchResponse<T> {
@@ -60,14 +61,23 @@ export default class CfRepos extends Command {
   async run() {
     const {flags} = this.parse(CfRepos)
     const userConfig = await loadYamlFile(path.join(this.config.configDir, 'config.yml'))
-    const {esport, eshost, esrepo} = flags
-    const es_port = (esport !== undefined ? esport : userConfig.elasticsearch.port)
-    const es_host = (eshost !== undefined ? eshost : userConfig.elasticsearch.host)
+    const {esnode, esca, escloudid, escloudusername, escloudpassword, esrepo} = flags
+    const es_node = (esnode !== undefined ? esnode : userConfig.elasticsearch.node)
+    const es_ssl_ca = (esca !== undefined ? esca : userConfig.elasticsearch.sslca)
+    const es_cloud_id = (escloudid !== undefined ? escloudid : userConfig.elasticsearch.cloud.id)
+    const es_cloud_username = (escloudusername !== undefined ? escloudusername : userConfig.elasticsearch.cloud.username)
+    const es_cloud_password = (escloudpassword !== undefined ? escloudpassword : userConfig.elasticsearch.cloud.password)
     const reposIndexName = (esrepo !== undefined ? esrepo : userConfig.elasticsearch.indices.repos)
 
     //1- Test if an index exists, if it does not, exit.
     cli.action.start('Checking if index: ' + reposIndexName + ' exists')
-    const client = new Client({node: es_host + ':' + es_port})
+    const client = await esClient({
+      es_node,
+      es_ssl_ca,
+      es_cloud_id,
+      es_cloud_username,
+      es_cloud_password,
+    })
     const healthCheck: ApiResponse = await client.cluster.health()
     if (healthCheck.body.status === 'red') {
       this.log('Elasticsearch cluster is not in an healthy state, exiting')

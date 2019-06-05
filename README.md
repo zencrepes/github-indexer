@@ -55,8 +55,8 @@ You can use github-indexer docker image to get started quickly.
 
 For example, to pull all repositories from an org:
 ```sh-session
-docker run -it --rm -e ES_HOST='http://host.docker.internal' \
--e ES_PORT='9200' \
+docker run -it --rm \
+-e ES_NODE='https://username:password@host.docker.internal:9200' \
 -e ES_REPO='gh_repos' \
 -e GITHUB_TOKEN='YOUR TOKEN HERE' \
 gh-indexer-8 github-indexer ghRepos -g org -o YOUR_ORG
@@ -67,8 +67,11 @@ gh-indexer-8 github-indexer ghRepos -g org -o YOUR_ORG
 A configuration file with default settings is automatically generated in `~/.config/github-indexer/config.yml` the first time you run the indexer. 
 
 Environment variable are also available for some of the configuration settings:
- - ES_HOST: Elasticsearch host
- - ES_PORT: Elasticsearch port
+ - ES_NODE: Elasticsearch node (for example: https://username:password@localhost:9200)
+ - ES_CA: Path to the ES CA public key (for example: ./cacert.pem)
+ - ES_CLOUD_ID: Elastic cloud id
+ - ES_CLOUD_USERNAME: Elastic cloud id
+ - ES_CLOUD_PASSWORD: Elastic cloud password
  - ES_REPO: Elasticsearch index containing the repository configuration
  - GITHUB_TOKEN: GitHub token for fetching data.
  - GITHUB_LOGIN: GitHub user login to fatch data from (for affiliated mode)
@@ -114,7 +117,7 @@ $ npm install -g github-indexer
 $ github-indexer COMMAND
 running command...
 $ github-indexer (-v|--version|version)
-github-indexer/0.1.0 darwin-x64 node-v10.16.0
+github-indexer/0.1.1 darwin-x64 node-v10.16.0
 $ github-indexer --help [COMMAND]
 USAGE
   $ github-indexer COMMAND
@@ -142,19 +145,22 @@ USAGE
   $ github-indexer cfRepos
 
 OPTIONS
-  -h, --help               show CLI help
-  --eshost=eshost          Elastic search host
-  --esport=esport          Elastic search port
-  --esrepo=esrepo          Elastic index containing the GitHub repository
-  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
-  --glogin=glogin          GitHub user Login (for fetching user repos)
-  --gtoken=gtoken          GitHub user Token
+  -h, --help                         show CLI help
+  --esca=esca                        Path to the ES CA public key (for example: ./cacert.pem)
+  --escloudid=escloudid              Elastic cloud id
+  --escloudpassword=escloudpassword  Elastic cloud password
+  --escloudusername=escloudusername  Elastic cloud username
+  --esnode=esnode                    Elasticsearch node (for example: https://username:password@localhost:9200)
+  --esrepo=esrepo                    Elastic index containing the GitHub repository
+  --gincrement=gincrement            GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                    GitHub user Login (for fetching user repos)
+  --gtoken=gtoken                    GitHub user Token
 
 EXAMPLE
   $ github-indexer cfRepo
 ```
 
-_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/cfRepos.ts)_
+_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.1/src/commands/cfRepos.ts)_
 
 ## `github-indexer ghIssues`
 
@@ -165,19 +171,22 @@ USAGE
   $ github-indexer ghIssues
 
 OPTIONS
-  -h, --help               show CLI help
-  --eshost=eshost          Elastic search host
-  --esport=esport          Elastic search port
-  --esrepo=esrepo          Elastic index containing the GitHub repository
-  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
-  --glogin=glogin          GitHub user Login (for fetching user repos)
-  --gtoken=gtoken          GitHub user Token
+  -h, --help                         show CLI help
+  --esca=esca                        Path to the ES CA public key (for example: ./cacert.pem)
+  --escloudid=escloudid              Elastic cloud id
+  --escloudpassword=escloudpassword  Elastic cloud password
+  --escloudusername=escloudusername  Elastic cloud username
+  --esnode=esnode                    Elasticsearch node (for example: https://username:password@localhost:9200)
+  --esrepo=esrepo                    Elastic index containing the GitHub repository
+  --gincrement=gincrement            GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                    GitHub user Login (for fetching user repos)
+  --gtoken=gtoken                    GitHub user Token
 
 EXAMPLE
   $ github-indexer ghIssues
 ```
 
-_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghIssues.ts)_
+_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.1/src/commands/ghIssues.ts)_
 
 ## `github-indexer ghLabels`
 
@@ -188,19 +197,22 @@ USAGE
   $ github-indexer ghLabels
 
 OPTIONS
-  -h, --help               show CLI help
-  --eshost=eshost          Elastic search host
-  --esport=esport          Elastic search port
-  --esrepo=esrepo          Elastic index containing the GitHub repository
-  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
-  --glogin=glogin          GitHub user Login (for fetching user repos)
-  --gtoken=gtoken          GitHub user Token
+  -h, --help                         show CLI help
+  --esca=esca                        Path to the ES CA public key (for example: ./cacert.pem)
+  --escloudid=escloudid              Elastic cloud id
+  --escloudpassword=escloudpassword  Elastic cloud password
+  --escloudusername=escloudusername  Elastic cloud username
+  --esnode=esnode                    Elasticsearch node (for example: https://username:password@localhost:9200)
+  --esrepo=esrepo                    Elastic index containing the GitHub repository
+  --gincrement=gincrement            GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                    GitHub user Login (for fetching user repos)
+  --gtoken=gtoken                    GitHub user Token
 
 EXAMPLE
   $ github-indexer ghLabels
 ```
 
-_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghLabels.ts)_
+_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.1/src/commands/ghLabels.ts)_
 
 ## `github-indexer ghMilestones`
 
@@ -211,19 +223,22 @@ USAGE
   $ github-indexer ghMilestones
 
 OPTIONS
-  -h, --help               show CLI help
-  --eshost=eshost          Elastic search host
-  --esport=esport          Elastic search port
-  --esrepo=esrepo          Elastic index containing the GitHub repository
-  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
-  --glogin=glogin          GitHub user Login (for fetching user repos)
-  --gtoken=gtoken          GitHub user Token
+  -h, --help                         show CLI help
+  --esca=esca                        Path to the ES CA public key (for example: ./cacert.pem)
+  --escloudid=escloudid              Elastic cloud id
+  --escloudpassword=escloudpassword  Elastic cloud password
+  --escloudusername=escloudusername  Elastic cloud username
+  --esnode=esnode                    Elasticsearch node (for example: https://username:password@localhost:9200)
+  --esrepo=esrepo                    Elastic index containing the GitHub repository
+  --gincrement=gincrement            GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                    GitHub user Login (for fetching user repos)
+  --gtoken=gtoken                    GitHub user Token
 
 EXAMPLE
   $ github-indexer ghMilestones
 ```
 
-_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghMilestones.ts)_
+_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.1/src/commands/ghMilestones.ts)_
 
 ## `github-indexer ghProjects`
 
@@ -234,19 +249,22 @@ USAGE
   $ github-indexer ghProjects
 
 OPTIONS
-  -h, --help               show CLI help
-  --eshost=eshost          Elastic search host
-  --esport=esport          Elastic search port
-  --esrepo=esrepo          Elastic index containing the GitHub repository
-  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
-  --glogin=glogin          GitHub user Login (for fetching user repos)
-  --gtoken=gtoken          GitHub user Token
+  -h, --help                         show CLI help
+  --esca=esca                        Path to the ES CA public key (for example: ./cacert.pem)
+  --escloudid=escloudid              Elastic cloud id
+  --escloudpassword=escloudpassword  Elastic cloud password
+  --escloudusername=escloudusername  Elastic cloud username
+  --esnode=esnode                    Elasticsearch node (for example: https://username:password@localhost:9200)
+  --esrepo=esrepo                    Elastic index containing the GitHub repository
+  --gincrement=gincrement            GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                    GitHub user Login (for fetching user repos)
+  --gtoken=gtoken                    GitHub user Token
 
 EXAMPLE
   $ github-indexer ghIssues
 ```
 
-_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghProjects.ts)_
+_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.1/src/commands/ghProjects.ts)_
 
 ## `github-indexer ghPullrequests`
 
@@ -257,19 +275,22 @@ USAGE
   $ github-indexer ghPullrequests
 
 OPTIONS
-  -h, --help               show CLI help
-  --eshost=eshost          Elastic search host
-  --esport=esport          Elastic search port
-  --esrepo=esrepo          Elastic index containing the GitHub repository
-  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
-  --glogin=glogin          GitHub user Login (for fetching user repos)
-  --gtoken=gtoken          GitHub user Token
+  -h, --help                         show CLI help
+  --esca=esca                        Path to the ES CA public key (for example: ./cacert.pem)
+  --escloudid=escloudid              Elastic cloud id
+  --escloudpassword=escloudpassword  Elastic cloud password
+  --escloudusername=escloudusername  Elastic cloud username
+  --esnode=esnode                    Elasticsearch node (for example: https://username:password@localhost:9200)
+  --esrepo=esrepo                    Elastic index containing the GitHub repository
+  --gincrement=gincrement            GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                    GitHub user Login (for fetching user repos)
+  --gtoken=gtoken                    GitHub user Token
 
 EXAMPLE
   $ github-indexer ghPullrequests
 ```
 
-_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghPullrequests.ts)_
+_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.1/src/commands/ghPullrequests.ts)_
 
 ## `github-indexer ghRepos`
 
@@ -280,17 +301,20 @@ USAGE
   $ github-indexer ghRepos
 
 OPTIONS
-  -f, --force                     Make all fetched repositories active by default
-  -g, --grab=affiliated|org|repo  (required) Select how to fetch repositories
-  -h, --help                      show CLI help
-  -o, --org=org                   GitHub organization login
-  -r, --repo=repo                 GitHub repository name
-  --eshost=eshost                 Elastic search host
-  --esport=esport                 Elastic search port
-  --esrepo=esrepo                 Elastic index containing the GitHub repository
-  --gincrement=gincrement         GitHub API query increment (max nodes to fetch at a time)
-  --glogin=glogin                 GitHub user Login (for fetching user repos)
-  --gtoken=gtoken                 GitHub user Token
+  -f, --force                        Make all fetched repositories active by default
+  -g, --grab=affiliated|org|repo     (required) Select how to fetch repositories
+  -h, --help                         show CLI help
+  -o, --org=org                      GitHub organization login
+  -r, --repo=repo                    GitHub repository name
+  --esca=esca                        Path to the ES CA public key (for example: ./cacert.pem)
+  --escloudid=escloudid              Elastic cloud id
+  --escloudpassword=escloudpassword  Elastic cloud password
+  --escloudusername=escloudusername  Elastic cloud username
+  --esnode=esnode                    Elasticsearch node (for example: https://username:password@localhost:9200)
+  --esrepo=esrepo                    Elastic index containing the GitHub repository
+  --gincrement=gincrement            GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                    GitHub user Login (for fetching user repos)
+  --gtoken=gtoken                    GitHub user Token
 
 EXAMPLES
   $ github-indexer ghRepo -g affiliated
@@ -298,7 +322,7 @@ EXAMPLES
   $ github-indexer ghRepo -g repo -o microsoft -r vscode
 ```
 
-_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/ghRepos.ts)_
+_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.1/src/commands/ghRepos.ts)_
 
 ## `github-indexer help [COMMAND]`
 
@@ -326,16 +350,19 @@ USAGE
   $ github-indexer init
 
 OPTIONS
-  --eshost=eshost          Elastic search host
-  --esport=esport          Elastic search port
-  --esrepo=esrepo          Elastic index containing the GitHub repository
-  --gincrement=gincrement  GitHub API query increment (max nodes to fetch at a time)
-  --glogin=glogin          GitHub user Login (for fetching user repos)
-  --gtoken=gtoken          GitHub user Token
+  --esca=esca                        Path to the ES CA public key (for example: ./cacert.pem)
+  --escloudid=escloudid              Elastic cloud id
+  --escloudpassword=escloudpassword  Elastic cloud password
+  --escloudusername=escloudusername  Elastic cloud username
+  --esnode=esnode                    Elasticsearch node (for example: https://username:password@localhost:9200)
+  --esrepo=esrepo                    Elastic index containing the GitHub repository
+  --gincrement=gincrement            GitHub API query increment (max nodes to fetch at a time)
+  --glogin=glogin                    GitHub user Login (for fetching user repos)
+  --gtoken=gtoken                    GitHub user Token
 
 EXAMPLE
   $ github-indexer init
 ```
 
-_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.0/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.1/src/commands/init.ts)_
 <!-- commandsstop -->

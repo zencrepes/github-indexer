@@ -6,15 +6,30 @@ import * as path from 'path'
 
 export default abstract class extends Command {
   static flags = {
-    esport: flags.string({
+    esnode: flags.string({
       required: false,
-      env: 'ES_PORT',
-      description: 'Elastic search port'
+      env: 'ES_NODE',
+      description: 'Elasticsearch node (for example: https://username:password@localhost:9200)'
     }),
-    eshost: flags.string({
+    esca: flags.string({
       required: false,
-      env: 'ES_HOST',
-      description: 'Elastic search host'
+      env: 'ES_CA',
+      description: 'Path to the ES CA public key (for example: ./cacert.pem)'
+    }),
+    escloudid: flags.string({
+      required: false,
+      env: 'ES_CLOUD_ID',
+      description: 'Elastic cloud id'
+    }),
+    escloudusername: flags.string({
+      required: false,
+      env: 'ES_CLOUD_USERNAME',
+      description: 'Elastic cloud username'
+    }),
+    escloudpassword: flags.string({
+      required: false,
+      env: 'ES_CLOUD_PASSWORD',
+      description: 'Elastic cloud password'
     }),
     esrepo: flags.string({
       required: false,
@@ -45,9 +60,14 @@ export default abstract class extends Command {
     if (!fs.existsSync(path.join(this.config.configDir, 'config.yml'))) {
       const defaultConfig = {
         elasticsearch: {
-          port: 9200,
           // tslint:disable-next-line:no-http-string
-          host: 'http://127.0.0.1',
+          node: 'http://127.0.0.1:9200',
+          sslca: null,
+          cloud: {
+            id: null,
+            username: null,
+            password: null,
+          },
           indices: {
             repos: 'gh_repos',
             issues: 'gh_issues_',
