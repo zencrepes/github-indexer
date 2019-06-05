@@ -11,8 +11,8 @@ Grabs data from GitHub and pushes it to an Elasticsearch instance
 
 <!-- toc -->
 * [Introduction](#introduction)
-* [Installation](#installation)
 * [Quick start with Docker](#quick-start-with-docker)
+* [Local installation](#local-installation)
 * [Configuration](#configuration)
 * [Usage](#usage)
 * [Commands](#commands)
@@ -38,31 +38,43 @@ Note: GitHub doesn't provide a mechanism to fetch new or updated labels so the s
 
 <!-- introduction -->
 
-# Installation
-<!-- installation -->
-```sh-session
-npm install -g github-indexer
-```
-<!-- installationstop -->
-
 # Quick start with Docker
+
 You can use github-indexer docker image to get started quickly.
 
 For example, to pull all repositories from an org:
 
-Install 
+Fetch the latest image
 ```sh-session
-docker pull zencrepes/github-indexer
+docker pull zencrepes/github-indexer:latest
 ```
 
 Run
 ```sh-session
 docker run -it --rm \
 -e ES_NODE='https://username:password@host.docker.internal:9200' \
--e ES_REPO='gh_repos' \
 -e GITHUB_TOKEN='YOUR TOKEN HERE' \
-gh-indexer-8 github-indexer ghRepos -g org -o YOUR_ORG
+zencrepes/github-indexer:latest github-indexer ghRepos -g org -o YOUR_ORG
 ```
+
+Or in a shell (you can then use github-indexer commands)
+```sh-session
+docker run -it --rm \
+-e ES_NODE='https://username:password@host.docker.internal:9200' \
+-e GITHUB_TOKEN='YOUR TOKEN HERE' \
+zencrepes/github-indexer:latest /bin/ash
+```
+
+
+# Local installation
+<!-- installation -->
+
+You can choose to install github-indexer locally, although running docker is probably easier if you're just looking at using github-indexer.
+```sh-session
+npm install -g github-indexer
+```
+<!-- installationstop -->
+
 
 # Configuration
 <!-- configuration -->
@@ -125,7 +137,7 @@ $ npm install -g github-indexer
 $ github-indexer COMMAND
 running command...
 $ github-indexer (-v|--version|version)
-github-indexer/0.1.4 darwin-x64 node-v10.16.0
+github-indexer/0.1.5 darwin-x64 node-v10.16.0
 $ github-indexer --help [COMMAND]
 USAGE
   $ github-indexer COMMAND
@@ -168,7 +180,7 @@ EXAMPLE
   $ github-indexer cfRepo
 ```
 
-_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.4/src/commands/cfRepos.ts)_
+_See code: [src/commands/cfRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/cfRepos.ts)_
 
 ## `github-indexer ghIssues`
 
@@ -194,7 +206,7 @@ EXAMPLE
   $ github-indexer ghIssues
 ```
 
-_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.4/src/commands/ghIssues.ts)_
+_See code: [src/commands/ghIssues.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghIssues.ts)_
 
 ## `github-indexer ghLabels`
 
@@ -220,7 +232,7 @@ EXAMPLE
   $ github-indexer ghLabels
 ```
 
-_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.4/src/commands/ghLabels.ts)_
+_See code: [src/commands/ghLabels.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghLabels.ts)_
 
 ## `github-indexer ghMilestones`
 
@@ -246,7 +258,7 @@ EXAMPLE
   $ github-indexer ghMilestones
 ```
 
-_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.4/src/commands/ghMilestones.ts)_
+_See code: [src/commands/ghMilestones.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghMilestones.ts)_
 
 ## `github-indexer ghProjects`
 
@@ -272,7 +284,7 @@ EXAMPLE
   $ github-indexer ghIssues
 ```
 
-_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.4/src/commands/ghProjects.ts)_
+_See code: [src/commands/ghProjects.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghProjects.ts)_
 
 ## `github-indexer ghPullrequests`
 
@@ -298,7 +310,7 @@ EXAMPLE
   $ github-indexer ghPullrequests
 ```
 
-_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.4/src/commands/ghPullrequests.ts)_
+_See code: [src/commands/ghPullrequests.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghPullrequests.ts)_
 
 ## `github-indexer ghRepos`
 
@@ -330,7 +342,7 @@ EXAMPLES
   $ github-indexer ghRepo -g repo -o microsoft -r vscode
 ```
 
-_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.4/src/commands/ghRepos.ts)_
+_See code: [src/commands/ghRepos.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/ghRepos.ts)_
 
 ## `github-indexer help [COMMAND]`
 
@@ -372,7 +384,7 @@ EXAMPLE
   $ github-indexer init
 ```
 
-_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.4/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/zencrepes/github-indexer/blob/v0.1.5/src/commands/init.ts)_
 <!-- commandsstop -->
 
 # Develop

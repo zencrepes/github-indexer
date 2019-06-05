@@ -1,7 +1,7 @@
 {
   "name": "github-indexer",
   "description": "Grabs data from GitHub and pushes it to an Elasticsearch instance",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "author": "fgerthoffert @Fgerthoffert",
   "bin": {
     "github-indexer": "./bin/run"
