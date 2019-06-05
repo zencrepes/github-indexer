@@ -16,7 +16,7 @@ jobs:
           command: yarn
       - run:
           name: Install tslint
-          command: yarn install ts-lint -g
+          command: yarn global add ts-lint
       - run:
           name: Display version
           command: ./bin/run --version
@@ -60,7 +60,7 @@ workflows:
     jobs:
       - node-latest
       - node-10
-      - mpde-8
+      - node-8
       - cache:
           filters:
             tags:
