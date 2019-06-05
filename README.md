@@ -81,11 +81,17 @@ Environment variable are also available for some of the configuration settings:
 
 Environment variable will take precedence over the corresponding settings in the configuration file.
 
+Authentication to the Elasticsearch cluster is possible either through Basic Auth (using ES_NODE only), with SSL (using ES_NODE and ES_CA), or to an Elastic Cloud cluster (using ES_CLOUD_ID, ES_CLOUD_USERNAME and ES_CLOUD_PASSWORD).
+
 Configuration is stored in `~/.config/github-indexer/config.yml`, it contains the following settings;
 ```yaml
 elasticsearch:
-  port: 9200                        # Eleasticsearch port
-  host: 'http://127.0.0.1'          # Eleasticsearch host
+  node: 'https://username:password@host.docker.internal:9200' # Eleasticsearch node
+  sslca: './cacert.pem'             # Path the the public CA cert, or null
+  cloud:                            # Elastic Cloud credentials
+    id: null
+    username: null
+    password: null
   indices:
     repos: 'gh_repos'               # Eleasticsearch index containing repository configuration
     issues: 'gh_issues_'            # Prefix for the Elasticsearch index containing issues, one index is created per repository, eg: gh_issues_ORG_REPO
