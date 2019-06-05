@@ -17,11 +17,11 @@ jobs:
       - run:
           name: Display version
           command: ./bin/run --version
-      - run: Display help
-          name: Display version
+      - run:
+          name: Display help
           command: ./bin/run --help
-      - run: Init app
-          name: Display version
+      - run:
+          name: Init app
           command: ./bin/run init
       - run:
           name: Linting
