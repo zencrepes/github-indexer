@@ -57,6 +57,7 @@ export default abstract class extends Command {
   async init() {
     // If config file does not exists, initialize it:
     fse.ensureDirSync(this.config.configDir)
+    fse.ensureDirSync(this.config.configDir + 'cache/')
     if (!fs.existsSync(path.join(this.config.configDir, 'config.yml'))) {
       const defaultConfig = {
         elasticsearch: {
