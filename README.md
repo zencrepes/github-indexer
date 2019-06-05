@@ -54,7 +54,7 @@ Run
 docker run -it --rm \
 -e ES_NODE='https://username:password@host.docker.internal:9200' \
 -e GITHUB_TOKEN='YOUR TOKEN HERE' \
-zencrepes/github-indexer:latest github-indexer ghRepos -g org -o YOUR_ORG
+zencrepes/github-indexer:latest github-indexer ghRepos -g org -o YOUR_ORG -f
 ```
 
 Or in a shell (you can then use github-indexer commands)
